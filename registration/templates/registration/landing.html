@@ -84,6 +84,10 @@
                     Go to Dashboard
                 </a>
             {% endif %}
+            
+            <button id="installAppBtn" class="btn btn-primary btn-lg px-4 py-3 rounded-pill shadow-sm d-none">
+                <i class="bi bi-download me-2"></i> Install App
+            </button>
         </div>
     </div>
     <div class="col-lg-6 text-center d-flex flex-column h-100">
@@ -102,4 +106,40 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let deferredPrompt;
+    const installBtn = document.getElementById('installAppBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        deferredPrompt = e;
+        // Update UI to notify the user they can add to home screen
+        installBtn.classList.remove('d-none');
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                installBtn.classList.add('d-none');
+            }
+            // We've used the prompt, and can't use it again, throw it away
+            deferredPrompt = null;
+        }
+    });
+
+    // Hide the button if the app is successfully installed
+    window.addEventListener('appinstalled', () => {
+        installBtn.classList.add('d-none');
+        deferredPrompt = null;
+    });
+</script>
 {% endblock %}

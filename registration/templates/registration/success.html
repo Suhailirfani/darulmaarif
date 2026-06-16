@@ -1,0 +1,18 @@
+{% extends 'registration/base.html' %}
+
+{% block title %}Success - Online Dars{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <div class="card shadow-sm">
+            <div class="card-body py-5">
+                <h1 class="display-4 text-success mb-4">✓</h1>
+                <h2 class="mb-3">Registration Successful!</h2>
+                <p class="lead text-muted mb-4">Thank you for registering for the Online Dars.</p>
+                <a href="{% url 'register' %}" class="btn btn-outline-primary">Register Another Person</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

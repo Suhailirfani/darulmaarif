@@ -1,0 +1,126 @@
+{% extends 'registration/base.html' %}
+
+{% block title %}Register - Online Dars{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-5">
+            <div class="card-header text-center">
+                <h4 class="mb-0">Registration Form</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="registrationForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">House Name</label>
+                        {{ form.house_name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Place</label>
+                        {{ form.place }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Post</label>
+                        {{ form.post }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">District</label>
+                        {{ form.district }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mobile</label>
+                        {{ form.mobile }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="sameAsMobile">
+                            <label class="form-check-label" for="sameAsMobile">
+                                WhatsApp number is same as Mobile
+                            </label>
+                        </div>
+                        <label class="form-label">WhatsApp</label>
+                        {{ form.whatsapp }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Paid or Not</label>
+                        {{ form.is_paid }}
+                    </div>
+
+                    <div id="paymentFields" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Transaction Time and Date</label>
+                            {{ form.transaction_time_and_date }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Transaction ID (Optional)</label>
+                            {{ form.transaction_id }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Screenshot (Optional)</label>
+                            {{ form.screenshot }}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">Submit Registration</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add form-control class to all inputs
+    const inputs = document.querySelectorAll('input:not([type="checkbox"]), select');
+    inputs.forEach(input => input.classList.add('form-control'));
+
+    // Handle WhatsApp same as mobile
+    const mobileInput = document.getElementById('{{ form.mobile.id_for_label }}');
+    const whatsappInput = document.getElementById('{{ form.whatsapp.id_for_label }}');
+    const sameCheckbox = document.getElementById('sameAsMobile');
+
+    sameCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            whatsappInput.value = mobileInput.value;
+            whatsappInput.readOnly = true;
+        } else {
+            whatsappInput.readOnly = false;
+            whatsappInput.value = '';
+        }
+    });
+
+    mobileInput.addEventListener('input', function() {
+        if (sameCheckbox.checked) {
+            whatsappInput.value = this.value;
+        }
+    });
+
+    // Handle payment fields visibility
+    const isPaidSelect = document.getElementById('{{ form.is_paid.id_for_label }}');
+    const paymentFields = document.getElementById('paymentFields');
+
+    function togglePaymentFields() {
+        if (isPaidSelect.value === 'True') {
+            paymentFields.style.display = 'block';
+        } else {
+            paymentFields.style.display = 'none';
+        }
+    }
+
+    isPaidSelect.addEventListener('change', togglePaymentFields);
+    togglePaymentFields(); // Initial check
+});
+</script>
+{% endblock %}

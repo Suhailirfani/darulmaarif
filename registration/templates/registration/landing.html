@@ -1,0 +1,105 @@
+{% extends 'registration/base.html' %}
+
+{% block title %}Welcome - Online Dars{% endblock %}
+
+{% block content %}
+{% load static %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&display=swap');
+
+    .arabic-pattern-bg {
+        position: relative;
+        background: linear-gradient(135deg, #b10f54, #5c0529);
+        overflow: hidden;
+    }
+    .arabic-pattern-bg-alt {
+        position: relative;
+        background: #faf8f5; /* Elegant Off-White */
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+    .arabic-pattern-bg::before, .arabic-pattern-bg-alt::before {
+        content: "المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام \00a0\00a0 المرأة في ظلال الإسلام";
+        position: absolute;
+        top: -100%;
+        left: -100%;
+        width: 300%;
+        height: 300%;
+        font-size: 2.5rem;
+        font-family: 'Aref Ruqaa', serif;
+        font-weight: 700;
+        transform: rotate(-15deg);
+        line-height: 2.5;
+        pointer-events: none;
+        text-align: center;
+        white-space: pre-wrap; /* Forces the text to wrap */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 0;
+    }
+    .arabic-pattern-bg::before {
+        color: rgba(255, 255, 255, 0.167); /* White texture for dark background */
+    }
+    .arabic-pattern-bg-alt::before {
+        color: rgba(177, 15, 84, 0.08); /* Faint magenta texture for off-white background */
+    }
+    .arabic-pattern-bg img, .arabic-pattern-bg a, .arabic-pattern-bg-alt img, .arabic-pattern-bg-alt .card {
+        position: relative;
+        z-index: 1;
+    }
+</style>
+<div class="row align-items-start mt-5">
+    <div class="col-lg-6 mb-4 mb-lg-0">
+        <div class="mb-4 p-4 rounded-4 shadow-sm text-center arabic-pattern-bg d-flex flex-column justify-content-center align-items-center" style="min-height: 450px;">
+            <img src="{% static 'img/NAME.PNG' %}" alt="അൽ മർഅ Online Dars" class="img-fluid mb-4" style="max-height: 200px;">
+            <a href="{% url 'register' %}" class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-bold shadow text-primary" style="color: #b10f54 !important;">
+                REGISTER NOW
+            </a>
+        </div>
+        <p class="lead text-muted mb-4" style="line-height: 1.8;">
+            പ്രമുഖ പണ്ഡിതരുടെയും അനുവാചക ലോകത്തിൻ്റെയും ശ്രദ്ധ പിടിച്ചുപറ്റിയ 150ലധികം ഗ്രന്ഥങ്ങൾ രചിച്ച, അനുഗ്രഹീത തൂലികയുടെ ഉടമയായ ശൈഖുനാ കോടമ്പുഴ ബാവ ഉസ്താദിൻ്റെ അൽ മർഅതു ഫീ ളിലാലിൽ ഇസ്ലാം (സ്ത്രീ ഇസ്ലാമിൻ്റെ ശീതളച്ഛായയിൽ) എന്ന ഗ്രന്ഥം ദർസി രൂപത്തിൽ ഓതി പഠിക്കാൻ സുവർണാവസരം.
+        </p>
+        
+        <div class="card bg-light border-0 mb-4 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-dark mb-3">Class Details</h5>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="bi bi-book text-primary me-2"></i><strong>Book:</strong> Al Mar'athu Fi Zilalil Islam</li>
+                    <li class="mb-2"><i class="bi bi-person text-primary me-2"></i><strong>Author:</strong> Qalamul Islam Kodampuzha Bava Musliyar</li>
+                    <li class="mb-2"><i class="bi bi-person-video3 text-primary me-2"></i><strong>Instructor:</strong> Sahal Shamil Irfani Kodampuzha</li>
+                    <li><i class="bi bi-people text-primary me-2"></i><strong>Target Audience:</strong> Women</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="d-grid gap-3 d-md-flex justify-content-md-start">
+            
+            {% if not user.is_authenticated %}
+                <a href="{% url 'login' %}?next={% url 'dashboard' %}" class="btn btn-outline-secondary btn-lg px-4 py-3 rounded-pill shadow-sm">
+                    Admin Login
+                </a>
+            {% else %}
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-success btn-lg px-4 py-3 rounded-pill shadow-sm">
+                    Go to Dashboard
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-6 text-center d-flex flex-column h-100">
+        <div class="p-4 mb-4 rounded-4 shadow-sm text-center arabic-pattern-bg-alt d-flex flex-column justify-content-center align-items-center h-100" style="min-height: 450px;">
+            <img src="{% static 'img/BOOK.PNG' %}" alt="Al Mar'athu Fi Zilalil Islam Book" class="img-fluid rounded-4 shadow-lg mb-4" style="max-width: 60%; height: auto;">
+            
+            <div class="card bg-white border-0 shadow-sm text-start" style="border-radius: 1rem; width: 100%;">
+                <div class="card-body p-4">
+                    <h6 class="text-primary mb-3 fw-bold" style="color: #1e3c72 !important;">രചന: ഖലമുൽ ഇസ്ലാം കോടമ്പുഴ ബാവ മുസ്ലിയാർ</h6>
+                    <h5 class="fw-bold mb-3">ഗ്രന്ഥത്തെ പരിചയപ്പെടാം</h5>
+                    <p class="text-muted mb-0" style="line-height: 1.6; font-size: 0.9rem;">
+                        സ്ത്രീകളുടെ സ്ഥാനം, അവരുടെ മൗലികാവകാശങ്ങൾ, ആനുകൂല്യങ്ങൾ പുത്രി, യുവതി, ഭാര്യ, വിധവ, അവിവാഹിത, വിവാഹമോചിത, മാതാവ് എന്നീ നിലകളിൽ ഇസ്ലാം സ്ത്രീക്ക് നൽകിയ സവിശേഷ പരിഗണനകൾ, ബാധ്യതകൾ, സന്താന പരിപാലനം, നിയന്ത്രണം, സ്ത്രീകളുടെ ബഹിർഗമനം, പൊതു രംഗപ്രവേശം, സ്ത്രീ സ്വാതന്ത്ര്യം, സ്ത്രീപുരുഷ സമത്വം, സ്ത്രീപുരുഷ സങ്കലനം ആദിയായ വിഷയങ്ങൾ ലളിതവും സംരക്ഷിതവും ആയി ആധികാരിക അവലംബങ്ങൾ സഹിതം വിവരിക്കുന്നു.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'registration/base.html' %}
+
+{% block title %}Dashboard - Online Dars{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Registered</h5>
+                <p class="card-text display-4">{{ total_registered }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Paid</h5>
+                <p class="card-text display-4">{{ total_paid }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Registrations</h5>
+        <a href="{% url 'export_excel' %}" class="btn btn-light btn-sm text-primary">Download Excel</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Mobile</th>
+                        <th>District</th>
+                        <th>Paid</th>
+                        <th>Transaction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in registrations %}
+                    <tr>
+                        <td>{{ reg.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            {{ reg.name }}<br>
+                            <small class="text-muted">{{ reg.house_name }}, {{ reg.place }}</small>
+                        </td>
+                        <td>
+                            M: {{ reg.mobile }}<br>
+                            <small class="text-muted">W: {{ reg.whatsapp }}</small>
+                        </td>
+                        <td>{{ reg.district }}</td>
+                        <td>
+                            {% if reg.is_paid %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-danger">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if reg.is_paid %}
+                                {{ reg.transaction_time_and_date|date:"Y-m-d H:i" }}<br>
+                                <small class="text-muted">ID: {{ reg.transaction_id|default:"-" }}</small>
+                                {% if reg.screenshot %}
+                                    <br><a href="{{ reg.screenshot.url }}" target="_blank" class="badge bg-info text-decoration-none">View Screenshot</a>
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No registrations found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

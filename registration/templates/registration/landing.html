@@ -51,18 +51,18 @@
 </style>
 <div class="row align-items-start mt-5">
     <div class="col-lg-6 mb-4 mb-lg-0">
-        <div class="mb-4 p-4 rounded-4 shadow-sm text-center arabic-pattern-bg d-flex flex-column justify-content-center align-items-center" style="min-height: 450px;">
+        <div class="mb-4 p-4 p-md-5 rounded-4 shadow-sm text-center arabic-pattern-bg d-flex flex-column justify-content-center align-items-center h-100">
             <img src="{% static 'img/NAME.png' %}" alt="അൽ മർഅ Online Dars" class="img-fluid mb-4" style="max-height: 200px;">
-            <a href="{% url 'register' %}" class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-bold shadow text-primary" style="color: #b10f54 !important;">
+            <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4 px-md-5 py-3 rounded-pill fw-bold shadow text-primary" style="color: #b10f54 !important;">
                 REGISTER NOW
             </a>
         </div>
-        <p class="lead text-muted mb-4" style="line-height: 1.8;">
+        <p class="lead text-muted mb-4 px-2" style="line-height: 1.8;">
             പ്രമുഖ പണ്ഡിതരുടെയും അനുവാചക ലോകത്തിൻ്റെയും ശ്രദ്ധ പിടിച്ചുപറ്റിയ 150ലധികം ഗ്രന്ഥങ്ങൾ രചിച്ച, അനുഗ്രഹീത തൂലികയുടെ ഉടമയായ ശൈഖുനാ കോടമ്പുഴ ബാവ ഉസ്താദിൻ്റെ അൽ മർഅതു ഫീ ളിലാലിൽ ഇസ്ലാം (സ്ത്രീ ഇസ്ലാമിൻ്റെ ശീതളച്ഛായയിൽ) എന്ന ഗ്രന്ഥം ദർസി രൂപത്തിൽ ഓതി പഠിക്കാൻ സുവർണാവസരം.
         </p>
         
-        <div class="card bg-light border-0 mb-4 shadow-sm">
-            <div class="card-body">
+        <div class="card bg-light border-0 mb-4 shadow-sm mx-2 mx-md-0">
+            <div class="card-body p-4">
                 <h5 class="card-title text-dark mb-3">Class Details</h5>
                 <ul class="list-unstyled mb-0">
                     <li class="mb-2"><i class="bi bi-book text-primary me-2"></i><strong>Book:</strong> Al Mar'athu Fi Zilalil Islam</li>
@@ -73,7 +73,7 @@
             </div>
         </div>
 
-        <div class="d-grid gap-3 d-md-flex justify-content-md-start">
+        <div class="d-grid gap-3 d-md-flex justify-content-md-start mx-2 mx-md-0 mb-4 mb-lg-0">
             
             {% if not user.is_authenticated %}
                 <a href="{% url 'login' %}?next={% url 'dashboard' %}" class="btn btn-outline-secondary btn-lg px-4 py-3 rounded-pill shadow-sm">
@@ -87,7 +87,7 @@
         </div>
     </div>
     <div class="col-lg-6 text-center d-flex flex-column h-100">
-        <div class="p-4 mb-4 rounded-4 shadow-sm text-center arabic-pattern-bg-alt d-flex flex-column justify-content-center align-items-center h-100" style="min-height: 450px;">
+        <div class="p-4 p-md-5 rounded-4 shadow-sm text-center arabic-pattern-bg-alt d-flex flex-column justify-content-center align-items-center h-100">
             <img src="{% static 'img/BOOK.png' %}" alt="Al Mar'athu Fi Zilalil Islam Book" class="img-fluid rounded-4 shadow-lg mb-4" style="max-width: 60%; height: auto;">
             
             <div class="card bg-white border-0 shadow-sm text-start" style="border-radius: 1rem; width: 100%;">

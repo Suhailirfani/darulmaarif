@@ -40,13 +40,33 @@
             color: white;
         }
 
-
+        .brand-main, .brand-sub {
+            display: inline;
+        }
+        
+        @media (max-width: 576px) {
+            .navbar-brand {
+                line-height: 1.2;
+            }
+            .brand-main {
+                display: block;
+                font-size: 1.7rem;
+            }
+            .brand-sub {
+                display: block;
+                font-size: 1.1rem;
+                font-weight: 600;
+                opacity: 0.9;
+            }
+        }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'landing' %}">അൽ മർഅ ഓൺലൈൻ ദർസ്</a>
+            <a class="navbar-brand" href="{% url 'landing' %}">
+                <span class="brand-main">അൽ മർഅ</span> <span class="brand-sub">ഓൺലൈൻ ദർസ്</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>

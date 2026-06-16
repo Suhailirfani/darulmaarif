@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from .models import Registration
@@ -14,14 +14,15 @@ def register_view(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return redirect('register_success')
+            registration = form.save()
+            return redirect('register_success', pk=registration.pk)
     else:
         form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form})
 
-def register_success(request):
-    return render(request, 'registration/success.html')
+def register_success(request, pk):
+    reg = get_object_or_404(Registration, pk=pk)
+    return render(request, 'registration/success.html', {'reg': reg})
 
 @login_required
 def dashboard_view(request):
@@ -58,7 +59,7 @@ def export_excel_view(request):
     for reg in Registration.objects.all().order_by('-created_at'):
         row_num += 1
         row = [
-            reg.id, reg.name, reg.house_name, reg.place, reg.post, reg.district,
+            f"APP-{reg.application_number}", reg.name, reg.house_name, reg.place, reg.post, reg.district,
             reg.mobile, reg.whatsapp, 'Yes' if reg.is_paid else 'No',
             reg.transaction_time_and_date.strftime('%Y-%m-%d %H:%M:%S') if reg.transaction_time_and_date else '',
             reg.transaction_id,

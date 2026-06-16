@@ -14,5 +14,9 @@ class Registration(models.Model):
     screenshot = models.ImageField(upload_to='screenshots/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def application_number(self):
+        return f"{self.id:03d}" if self.id else ""
+
     def __str__(self):
-        return f"{self.name} - {self.mobile}"
+        return f"APP-{self.application_number} : {self.name} - {self.mobile}"

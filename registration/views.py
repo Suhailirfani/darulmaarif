@@ -150,6 +150,29 @@ def admin_assign_students_view(request):
             
     return redirect('admin_dashboard')
 
+import os
+
+@login_required
+def admin_verify_payment_view(request):
+    if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
+        return redirect('landing')
+        
+    if request.method == 'POST':
+        reg_id = request.POST.get('reg_id')
+        reg = get_object_or_404(Registration, id=reg_id)
+        if not reg.is_paid:
+            reg.is_paid = True
+            reg.save() # This triggers post_save to create the User account
+            
+            # Delete the screenshot to reduce storage
+            if reg.screenshot:
+                if os.path.isfile(reg.screenshot.path):
+                    os.remove(reg.screenshot.path)
+                reg.screenshot = None
+                reg.save()
+                
+    return redirect('admin_dashboard')
+
 @login_required
 def export_excel_view(request):
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

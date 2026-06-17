@@ -21,9 +21,9 @@
                         
                         <div class="mt-auto">
                             {% if item.is_completed %}
-                                <button class="btn btn-success w-100 rounded-pill py-2" disabled>
-                                    <i class="bi bi-check-circle-fill me-2"></i> Completed
-                                </button>
+                            <a href="{% url 'classroom' item.class.id %}" class="btn btn-success w-100 rounded-pill py-2 shadow-sm border-0">
+                                <i class="bi bi-check-circle-fill me-2"></i> Completed (Watch Again)
+                            </a>
                             {% elif item.is_unlocked %}
                                 <a href="{% url 'classroom' item.class.id %}" class="btn btn-primary w-100 rounded-pill py-2 shadow-sm" style="background-color: #b10f54; border: none;">
                                     <i class="bi bi-play-circle-fill me-2"></i> Watch Now

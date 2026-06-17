@@ -224,13 +224,15 @@ def classroom_view(request, class_id):
             if not prev_progress:
                 return HttpResponse("Please watch the previous class first.", status=403)
                 
-    if request.method == 'POST':
+    is_already_completed = StudentProgress.objects.filter(student=request.user, course_class=course_class, is_completed=True).exists()
+                
+    if request.method == 'POST' and not is_already_completed:
         progress, created = StudentProgress.objects.get_or_create(student=request.user, course_class=course_class)
         progress.is_completed = True
         progress.save()
         return redirect('student_dashboard')
         
-    return render(request, 'registration/classroom.html', {'course_class': course_class})
+    return render(request, 'registration/classroom.html', {'course_class': course_class, 'is_already_completed': is_already_completed})
 
 @login_required
 def mentor_dashboard_view(request):

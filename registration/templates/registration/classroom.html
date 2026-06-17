@@ -26,12 +26,18 @@
                     <i class="bi bi-arrow-left me-2"></i> Dashboard
                 </a>
                 
+                {% if is_already_completed %}
+                <button type="button" class="btn btn-success btn-lg px-5 rounded-pill fw-bold shadow-sm d-flex align-items-center" disabled>
+                    <i class="bi bi-check2-all fs-4 me-2"></i> Class Completed
+                </button>
+                {% else %}
                 <form method="POST" class="m-0">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill fw-bold shadow-sm d-flex align-items-center">
                         <i class="bi bi-check2-circle fs-4 me-2"></i> Mark as Completed
                     </button>
                 </form>
+                {% endif %}
             </div>
             
             <p class="text-muted small mt-3">Clicking 'Mark as Completed' will unlock the next class for you.</p>

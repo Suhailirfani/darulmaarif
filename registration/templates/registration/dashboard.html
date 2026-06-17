@@ -45,6 +45,38 @@
         background-color: #f8e6ed;
         transform: translateY(-1px);
     }
+    
+    /* Print Styles */
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #registrations, #registrations * {
+            visibility: visible;
+        }
+        #registrations {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        /* Hide buttons, dropdowns, and tabs */
+        .btn, .form-select, .form-check-input, .nav, .card-header .d-flex {
+            display: none !important;
+        }
+        /* Hide Checkbox (first) and Action (last) columns */
+        #registrations table th:first-child, 
+        #registrations table td:first-child,
+        #registrations table th:last-child, 
+        #registrations table td:last-child {
+            display: none !important;
+        }
+        /* Remove card shadow for cleaner print */
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+    }
 </style>
 
 <ul class="nav nav-pills custom-tabs d-flex justify-content-center flex-wrap mb-5" id="adminTabs" role="tablist">
@@ -82,7 +114,8 @@
                       </select>
                       <button type="submit" name="action" value="assign" class="btn btn-primary btn-sm">Assign</button>
                       <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete the selected applicants?');"><i class="bi bi-trash me-1"></i> Delete</button>
-                      <a href="{% url 'export_excel' %}" class="btn btn-light btn-sm text-primary border"><i class="bi bi-download me-1"></i> Excel</a>
+                      <a href="{% url 'export_excel' %}" class="btn btn-light btn-sm text-success border"><i class="bi bi-file-earmark-excel me-1"></i> Excel</a>
+                      <button type="button" class="btn btn-light btn-sm text-dark border" onclick="window.print()"><i class="bi bi-printer me-1"></i> Print</button>
                   </div>
               </div>
               <div class="card-body p-0">

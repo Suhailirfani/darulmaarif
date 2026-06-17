@@ -192,6 +192,37 @@ def admin_verify_payment_view(request):
     return redirect('admin_dashboard')
 
 @login_required
+def admin_edit_registration_view(request):
+    if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
+        return redirect('landing')
+        
+    if request.method == 'POST':
+        reg_id = request.POST.get('reg_id')
+        reg = get_object_or_404(Registration, id=reg_id)
+        
+        old_mobile = reg.mobile
+        reg.name = request.POST.get('name', reg.name)
+        reg.house_name = request.POST.get('house_name', reg.house_name)
+        reg.place = request.POST.get('place', reg.place)
+        reg.post = request.POST.get('post', reg.post)
+        reg.district = request.POST.get('district', reg.district)
+        reg.mobile = request.POST.get('mobile', reg.mobile)
+        reg.whatsapp = request.POST.get('whatsapp', reg.whatsapp)
+        
+        reg.save()
+        
+        # If mobile changed and they are already a user, update their login username
+        if old_mobile != reg.mobile and reg.is_paid:
+            try:
+                user = User.objects.get(username=old_mobile)
+                user.username = reg.mobile
+                user.save()
+            except User.DoesNotExist:
+                pass
+                
+    return redirect('admin_dashboard')
+
+@login_required
 def export_excel_view(request):
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename=registrations_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'

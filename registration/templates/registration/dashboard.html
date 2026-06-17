@@ -135,6 +135,7 @@
                                       {% endif %}
                                   </td>
                                   <td class="text-end">
+                                      <button type="button" class="btn btn-outline-primary btn-sm rounded-circle py-0 px-1 me-1" data-bs-toggle="modal" data-bs-target="#editRegModal{{ reg.id }}" title="Edit Applicant" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;"><i class="bi bi-pencil" style="font-size: 0.85rem;"></i></button>
                                       <button type="button" onclick="submitSingleDelete('{{ reg.id }}')" class="btn btn-outline-danger btn-sm rounded-circle py-0 px-1" title="Delete Applicant" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;"><i class="bi bi-trash" style="font-size: 0.85rem;"></i></button>
                                   </td>
                               </tr>
@@ -376,6 +377,61 @@
       </div>
   </div>
   {% endif %}
+
+  <!-- Edit Registration Modal for {{ reg.id }} -->
+  <div class="modal fade" id="editRegModal{{ reg.id }}" tabindex="-1">
+      <div class="modal-dialog">
+          <div class="modal-content border-0 shadow-lg rounded-4">
+              <div class="modal-header border-0 pb-0">
+                  <h5 class="modal-title fw-bold">Edit Applicant</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body text-start">
+                  <form method="POST" action="{% url 'admin_edit_registration' %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="reg_id" value="{{ reg.id }}">
+                      <div class="row">
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label text-muted small fw-bold">Name</label>
+                              <input type="text" name="name" class="form-control bg-light" value="{{ reg.name }}" required>
+                          </div>
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label text-muted small fw-bold">Mobile</label>
+                              <input type="text" name="mobile" class="form-control bg-light" value="{{ reg.mobile }}" required>
+                          </div>
+                      </div>
+                      <div class="row">
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label text-muted small fw-bold">House Name</label>
+                              <input type="text" name="house_name" class="form-control bg-light" value="{{ reg.house_name }}" required>
+                          </div>
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label text-muted small fw-bold">Place</label>
+                              <input type="text" name="place" class="form-control bg-light" value="{{ reg.place }}" required>
+                          </div>
+                      </div>
+                      <div class="row">
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label text-muted small fw-bold">Post</label>
+                              <input type="text" name="post" class="form-control bg-light" value="{{ reg.post }}" required>
+                          </div>
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label text-muted small fw-bold">District</label>
+                              <input type="text" name="district" class="form-control bg-light" value="{{ reg.district }}" required>
+                          </div>
+                      </div>
+                      <div class="mb-4">
+                          <label class="form-label text-muted small fw-bold">WhatsApp</label>
+                          <input type="text" name="whatsapp" class="form-control bg-light" value="{{ reg.whatsapp }}" required>
+                      </div>
+                      <div class="d-grid">
+                          <button type="submit" class="btn btn-primary rounded-pill fw-bold">Save Changes</button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+      </div>
+  </div>
 {% endfor %}
 
 <form id="singleDeleteForm" method="POST" action="{% url 'admin_assign_students' %}" style="display:none;">

@@ -93,6 +93,26 @@ def admin_manage_class_view(request):
                 order=request.POST.get('order'),
                 description=request.POST.get('description', '')
             )
+        elif action == 'edit':
+            class_id = request.POST.get('class_id')
+            raw_vid = request.POST.get('youtube_video_id', '').strip()
+            
+            import re
+            vid_id = raw_vid
+            match = re.search(r'(?:v=|youtu\.be/|embed/)([^&?/\s]{11})', raw_vid)
+            if match:
+                vid_id = match.group(1)
+            elif len(raw_vid) == 11:
+                vid_id = raw_vid
+            else:
+                vid_id = raw_vid[-11:] if len(raw_vid) > 11 else raw_vid
+                
+            CourseClass.objects.filter(id=class_id).update(
+                title=request.POST.get('title'),
+                youtube_video_id=vid_id,
+                order=request.POST.get('order'),
+                description=request.POST.get('description', '')
+            )
         elif action == 'delete':
             class_id = request.POST.get('class_id')
             CourseClass.objects.filter(id=class_id).delete()

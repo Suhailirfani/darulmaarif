@@ -143,13 +143,29 @@ def admin_assign_students_view(request):
         return redirect('landing')
         
     if request.method == 'POST':
-        mentor_id = request.POST.get('mentor_id')
-        student_ids = request.POST.getlist('student_ids')
+        action = request.POST.get('action')
+        student_ids = request.POST.getlist('student_ids') # These are now Registration IDs
         
-        if mentor_id and student_ids:
-            mentor_profile = get_object_or_404(UserProfile, id=mentor_id, role='MENTOR')
-            UserProfile.objects.filter(id__in=student_ids, role='STUDENT').update(mentor=mentor_profile)
+        if not student_ids:
+            return redirect('admin_dashboard')
             
+        if action == 'assign':
+            mentor_id = request.POST.get('mentor_id')
+            if mentor_id:
+                mentor_profile = get_object_or_404(UserProfile, id=mentor_id, role='MENTOR')
+                UserProfile.objects.filter(registration__id__in=student_ids, role='STUDENT').update(mentor=mentor_profile)
+        
+        elif action == 'delete':
+            # Bulk delete
+            # Delete associated User accounts first (cascades to UserProfile)
+            users_to_delete = User.objects.filter(profile__registration__id__in=student_ids)
+            users_to_delete.delete()
+            # Delete registrations
+            for reg in Registration.objects.filter(id__in=student_ids):
+                if reg.screenshot and os.path.isfile(reg.screenshot.path):
+                    os.remove(reg.screenshot.path)
+                reg.delete()
+                
     return redirect('admin_dashboard')
 
 import os

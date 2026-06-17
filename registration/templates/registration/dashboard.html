@@ -22,20 +22,45 @@
     </div>
 </div>
 
-<ul class="nav nav-pills mb-4" id="adminTabs" role="tablist">
+<style>
+    .custom-tabs .nav-link {
+        color: #b10f54;
+        background-color: #fff;
+        border: 2px solid #b10f54;
+        border-radius: 12px;
+        margin-right: 15px;
+        margin-bottom: 15px;
+        padding: 15px 30px;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .custom-tabs .nav-link.active {
+        color: #fff !important;
+        background-color: #b10f54 !important;
+        box-shadow: 0 6px 12px rgba(177, 15, 84, 0.3);
+        transform: translateY(-2px);
+    }
+    .custom-tabs .nav-link:hover:not(.active) {
+        background-color: #f8e6ed;
+        transform: translateY(-1px);
+    }
+</style>
+
+<ul class="nav nav-pills custom-tabs d-flex justify-content-center flex-wrap mb-5" id="adminTabs" role="tablist">
   <li class="nav-item" role="presentation">
     <button class="nav-link active fw-bold" id="registrations-tab" data-bs-toggle="pill" data-bs-target="#registrations" type="button" role="tab">
-        <i class="bi bi-people me-2"></i>Registrations
+        <i class="bi bi-people-fill me-2 fs-4 align-middle"></i> Registrations
     </button>
   </li>
   <li class="nav-item" role="presentation">
     <button class="nav-link fw-bold" id="mentors-tab" data-bs-toggle="pill" data-bs-target="#mentors" type="button" role="tab">
-        <i class="bi bi-person-video2 me-2"></i>Manage Mentors
+        <i class="bi bi-person-video2 me-2 fs-4 align-middle"></i> Manage Mentors
     </button>
   </li>
   <li class="nav-item" role="presentation">
     <button class="nav-link fw-bold" id="classes-tab" data-bs-toggle="pill" data-bs-target="#classes" type="button" role="tab">
-        <i class="bi bi-youtube me-2"></i>Manage Classes
+        <i class="bi bi-youtube me-2 fs-4 align-middle"></i> Manage Classes
     </button>
   </li>
 </ul>

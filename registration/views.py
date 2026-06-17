@@ -71,9 +71,25 @@ def admin_manage_class_view(request):
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'add':
+            raw_vid = request.POST.get('youtube_video_id', '').strip()
+            
+            # Safely extract YouTube ID if user pasted full URL
+            import re
+            vid_id = raw_vid
+            
+            # Match standard youtube.com/watch?v=ID or youtu.be/ID
+            match = re.search(r'(?:v=|youtu\.be/|embed/)([^&?/\s]{11})', raw_vid)
+            if match:
+                vid_id = match.group(1)
+            elif len(raw_vid) == 11:
+                vid_id = raw_vid
+            else:
+                # Fallback, just try to take the last 11 characters if it's a weird url, or just save as is
+                vid_id = raw_vid[-11:] if len(raw_vid) > 11 else raw_vid
+                
             CourseClass.objects.create(
                 title=request.POST.get('title'),
-                youtube_video_id=request.POST.get('youtube_video_id'),
+                youtube_video_id=vid_id,
                 order=request.POST.get('order'),
                 description=request.POST.get('description', '')
             )

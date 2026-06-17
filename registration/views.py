@@ -15,7 +15,9 @@ def register_view(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST, request.FILES)
         if form.is_valid():
-            registration = form.save()
+            registration = form.save(commit=False)
+            registration.is_paid = False # Force to False so admin has to verify screenshot
+            registration.save()
             return redirect('register_success', pk=registration.pk)
     else:
         form = RegistrationForm()

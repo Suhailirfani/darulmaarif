@@ -409,6 +409,19 @@
                 localStorage.setItem('activeAdminTab', event.target.id);
             });
         });
+
+        // 3. Persist Scroll Position across reloads
+        let scrollpos = localStorage.getItem('adminScrollPos');
+        if (scrollpos) {
+            setTimeout(function() {
+                window.scrollTo(0, parseInt(scrollpos));
+            }, 10);
+            localStorage.removeItem('adminScrollPos');
+        }
+    });
+
+    window.addEventListener('beforeunload', function() {
+        localStorage.setItem('adminScrollPos', window.scrollY);
     });
 </script>
 {% endblock %}

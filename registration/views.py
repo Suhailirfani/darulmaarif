@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from .models import Registration
+from .models import Registration, CourseClass, StudentProgress, UserProfile
 from .forms import RegistrationForm
 import csv
 from datetime import datetime
@@ -25,7 +25,25 @@ def register_success(request, pk):
     return render(request, 'registration/success.html', {'reg': reg})
 
 @login_required
-def dashboard_view(request):
+def dashboard_router(request):
+    try:
+        profile = request.user.profile
+        if profile.role == 'ADMIN':
+            return redirect('admin_dashboard')
+        elif profile.role == 'MENTOR':
+            return redirect('mentor_dashboard')
+        else:
+            return redirect('student_dashboard')
+    except:
+        if request.user.is_superuser:
+            return redirect('admin_dashboard')
+        return redirect('landing')
+
+@login_required
+def admin_dashboard_view(request):
+    if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
+        return redirect('landing')
+        
     registrations = Registration.objects.all().order_by('-created_at')
     total_registered = registrations.count()
     total_paid = registrations.filter(is_paid=True).count()
@@ -71,3 +89,79 @@ def export_excel_view(request):
             
     workbook.save(response)
     return response
+
+@login_required
+def student_dashboard_view(request):
+    if getattr(request.user, 'profile', None) and request.user.profile.role != 'STUDENT':
+        return redirect('landing')
+        
+    classes = CourseClass.objects.all().order_by('order')
+    progress_list = StudentProgress.objects.filter(student=request.user)
+    
+    completed_class_ids = set(p.course_class.id for p in progress_list if p.is_completed)
+    
+    class_data = []
+    is_unlocked = True
+    
+    for c in classes:
+        completed = c.id in completed_class_ids
+        class_data.append({
+            'class': c,
+            'is_unlocked': is_unlocked,
+            'is_completed': completed
+        })
+        is_unlocked = completed
+        
+    return render(request, 'registration/student_dashboard.html', {'class_data': class_data})
+
+@login_required
+def classroom_view(request, class_id):
+    if getattr(request.user, 'profile', None) and request.user.profile.role != 'STUDENT':
+        return redirect('landing')
+        
+    course_class = get_object_or_404(CourseClass, id=class_id)
+    
+    # Check if unlocked
+    if course_class.order > 1:
+        prev_class = CourseClass.objects.filter(order=course_class.order - 1).first()
+        if prev_class:
+            prev_progress = StudentProgress.objects.filter(student=request.user, course_class=prev_class, is_completed=True).exists()
+            if not prev_progress:
+                return HttpResponse("Please watch the previous class first.", status=403)
+                
+    if request.method == 'POST':
+        progress, created = StudentProgress.objects.get_or_create(student=request.user, course_class=course_class)
+        progress.is_completed = True
+        progress.save()
+        return redirect('student_dashboard')
+        
+    return render(request, 'registration/classroom.html', {'course_class': course_class})
+
+@login_required
+def mentor_dashboard_view(request):
+    if getattr(request.user, 'profile', None) and request.user.profile.role != 'MENTOR':
+        return redirect('landing')
+        
+    total_classes = CourseClass.objects.count()
+    student_data = []
+    
+    try:
+        profile = request.user.profile
+        assigned_students = profile.mentees.all()
+        
+        for student_profile in assigned_students:
+            user = student_profile.user
+            completed_count = StudentProgress.objects.filter(student=user, is_completed=True).count()
+            last_progress = StudentProgress.objects.filter(student=user, is_completed=True).order_by('-completed_at').first()
+            
+            student_data.append({
+                'name': user.first_name,
+                'mobile': user.username,
+                'completed_count': completed_count,
+                'total_classes': total_classes,
+                'last_activity': last_progress.completed_at if last_progress else None
+            })
+    except:
+        pass
+        
+    return render(request, 'registration/mentor_dashboard.html', {'student_data': student_data})

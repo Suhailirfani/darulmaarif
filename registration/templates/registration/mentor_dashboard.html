@@ -1,0 +1,57 @@
+{% extends 'registration/base.html' %}
+{% load static %}
+
+{% block title %}Mentor Dashboard - Online Dars{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center" style="color: #b10f54;">Mentor Dashboard</h2>
+    <p class="text-center text-muted mb-5">Track the progress of your assigned students.</p>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="py-3 px-4">Student Name</th>
+                                    <th class="py-3 px-4">Mobile</th>
+                                    <th class="py-3 px-4 text-center">Classes Completed</th>
+                                    <th class="py-3 px-4">Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in student_data %}
+                                <tr>
+                                    <td class="py-3 px-4 fw-bold text-dark">{{ student.name }}</td>
+                                    <td class="py-3 px-4 text-muted">{{ student.mobile }}</td>
+                                    <td class="py-3 px-4 text-center">
+                                        <span class="badge rounded-pill px-3 py-2 {% if student.completed_count == student.total_classes and student.total_classes > 0 %}bg-success{% else %}bg-primary{% endif %}">
+                                            {{ student.completed_count }} / {{ student.total_classes }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-muted small">
+                                        {% if student.last_activity %}
+                                            {{ student.last_activity|date:"M d, Y" }}
+                                        <br><span class="text-secondary" style="font-size: 0.75rem;">{{ student.last_activity|time:"h:i A" }}</span>
+                                        {% else %}
+                                            No activity yet
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">No students assigned yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

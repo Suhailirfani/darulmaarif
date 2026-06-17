@@ -354,9 +354,31 @@
 
 {% block scripts %}
 <script>
+    // Select all checkbox logic
     document.getElementById('selectAll').addEventListener('change', function(e) {
         document.querySelectorAll('.student-checkbox').forEach(cb => {
             cb.checked = e.target.checked;
+        });
+    });
+
+    // Persist Active Tab across reloads using localStorage
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Check if there is a saved tab in localStorage
+        let activeTabId = localStorage.getItem('activeAdminTab');
+        if (activeTabId) {
+            let tabElement = document.getElementById(activeTabId);
+            if (tabElement) {
+                // Initialize and show the Bootstrap tab
+                let tab = new bootstrap.Tab(tabElement);
+                tab.show();
+            }
+        }
+
+        // 2. Listen for tab changes and save the ID
+        document.querySelectorAll('button[data-bs-toggle="pill"]').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function (event) {
+                localStorage.setItem('activeAdminTab', event.target.id);
+            });
         });
     });
 </script>

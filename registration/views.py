@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from .models import Registration, CourseClass, StudentProgress, UserProfile
 from .forms import RegistrationForm
 import csv
@@ -48,12 +49,70 @@ def admin_dashboard_view(request):
     total_registered = registrations.count()
     total_paid = registrations.filter(is_paid=True).count()
     
+    mentors = UserProfile.objects.filter(role='MENTOR')
+    course_classes = CourseClass.objects.all().order_by('order')
+    students = UserProfile.objects.filter(role='STUDENT')
+    
     context = {
         'registrations': registrations,
         'total_registered': total_registered,
         'total_paid': total_paid,
+        'mentors': mentors,
+        'course_classes': course_classes,
+        'students': students,
     }
     return render(request, 'registration/dashboard.html', context)
+
+@login_required
+def admin_manage_class_view(request):
+    if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
+        return redirect('landing')
+        
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add':
+            CourseClass.objects.create(
+                title=request.POST.get('title'),
+                youtube_video_id=request.POST.get('youtube_video_id'),
+                order=request.POST.get('order'),
+                description=request.POST.get('description', '')
+            )
+        elif action == 'delete':
+            class_id = request.POST.get('class_id')
+            CourseClass.objects.filter(id=class_id).delete()
+            
+    return redirect('admin_dashboard')
+
+@login_required
+def admin_manage_mentor_view(request):
+    if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
+        return redirect('landing')
+        
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        mobile = request.POST.get('mobile')
+        password = request.POST.get('password')
+        
+        if not User.objects.filter(username=mobile).exists():
+            user = User.objects.create_user(username=mobile, password=password, first_name=name)
+            UserProfile.objects.create(user=user, role='MENTOR')
+            
+    return redirect('admin_dashboard')
+
+@login_required
+def admin_assign_students_view(request):
+    if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
+        return redirect('landing')
+        
+    if request.method == 'POST':
+        mentor_id = request.POST.get('mentor_id')
+        student_ids = request.POST.getlist('student_ids')
+        
+        if mentor_id and student_ids:
+            mentor_profile = get_object_or_404(UserProfile, id=mentor_id, role='MENTOR')
+            UserProfile.objects.filter(id__in=student_ids, role='STUDENT').update(mentor=mentor_profile)
+            
+    return redirect('admin_dashboard')
 
 @login_required
 def export_excel_view(request):

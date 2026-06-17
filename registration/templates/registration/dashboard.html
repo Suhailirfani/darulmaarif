@@ -1,6 +1,6 @@
 {% extends 'registration/base.html' %}
 
-{% block title %}Dashboard - Online Dars{% endblock %}
+{% block title %}Admin Dashboard - Online Dars{% endblock %}
 
 {% block content %}
 <div class="row mb-4">
@@ -22,71 +22,272 @@
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Registrations</h5>
-        <div>
-            <a href="/admin/" target="_blank" class="btn btn-outline-primary btn-sm me-2">
-                <i class="bi bi-gear-fill me-1"></i> Manage LMS
-            </a>
-            <a href="{% url 'export_excel' %}" class="btn btn-light btn-sm text-primary">Download Excel</a>
-        </div>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>App No.</th>
-                        <th>Date</th>
-                        <th>Name</th>
-                        <th>Mobile</th>
-                        <th>District</th>
-                        <th>Paid</th>
-                        <th>Transaction</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for reg in registrations %}
-                    <tr>
-                        <td><strong>{{ reg.application_number }}</strong></td>
-                        <td>{{ reg.created_at|date:"Y-m-d H:i" }}</td>
-                        <td>
-                            {{ reg.name }}<br>
-                            <small class="text-muted">{{ reg.house_name }}, {{ reg.place }}</small>
-                        </td>
-                        <td>
-                            M: {{ reg.mobile }}<br>
-                            <small class="text-muted">W: {{ reg.whatsapp }}</small>
-                        </td>
-                        <td>{{ reg.district }}</td>
-                        <td>
-                            {% if reg.is_paid %}
-                                <span class="badge bg-success">Yes</span>
-                            {% else %}
-                                <span class="badge bg-danger">No</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if reg.is_paid %}
-                                {{ reg.transaction_time_and_date|date:"Y-m-d H:i" }}<br>
-                                <small class="text-muted">ID: {{ reg.transaction_id|default:"-" }}</small>
-                                {% if reg.screenshot %}
-                                    <br><a href="{{ reg.screenshot.url }}" target="_blank" class="badge bg-info text-decoration-none">View Screenshot</a>
-                                {% endif %}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">No registrations found.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+<ul class="nav nav-pills mb-4" id="adminTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active fw-bold" id="registrations-tab" data-bs-toggle="pill" data-bs-target="#registrations" type="button" role="tab">
+        <i class="bi bi-people me-2"></i>Registrations
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link fw-bold" id="mentors-tab" data-bs-toggle="pill" data-bs-target="#mentors" type="button" role="tab">
+        <i class="bi bi-person-video2 me-2"></i>Manage Mentors
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link fw-bold" id="classes-tab" data-bs-toggle="pill" data-bs-target="#classes" type="button" role="tab">
+        <i class="bi bi-youtube me-2"></i>Manage Classes
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content" id="adminTabsContent">
+  <!-- REGISTRATIONS TAB -->
+  <div class="tab-pane fade show active" id="registrations" role="tabpanel">
+      <form method="POST" action="{% url 'admin_assign_students' %}">
+          {% csrf_token %}
+          <div class="card shadow-sm border-0 mb-4">
+              <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                  <h5 class="mb-0 fw-bold">Registrations</h5>
+                  <div class="d-flex gap-2">
+                      <select name="mentor_id" class="form-select form-select-sm" style="width: auto;">
+                          <option value="">-- Assign to Mentor --</option>
+                          {% for mentor in mentors %}
+                              <option value="{{ mentor.id }}">{{ mentor.user.first_name }} ({{ mentor.user.username }})</option>
+                          {% endfor %}
+                      </select>
+                      <button type="submit" class="btn btn-primary btn-sm">Assign</button>
+                      <a href="{% url 'export_excel' %}" class="btn btn-light btn-sm text-primary border"><i class="bi bi-download me-1"></i> Excel</a>
+                  </div>
+              </div>
+              <div class="card-body p-0">
+                  <div class="table-responsive">
+                      <table class="table table-hover align-middle mb-0">
+                          <thead class="table-light">
+                              <tr>
+                                  <th class="px-3"><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                                  <th>App No.</th>
+                                  <th>Name</th>
+                                  <th>Mobile</th>
+                                  <th>Mentor</th>
+                                  <th>Paid</th>
+                                  <th>Transaction</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {% for reg in registrations %}
+                              <tr>
+                                  <td class="px-3">
+                                      {% if reg.is_paid %}
+                                          {% if not reg.student_profile.mentor %}
+                                              <input type="checkbox" name="student_ids" value="{{ reg.student_profile.id }}" class="form-check-input student-checkbox">
+                                          {% else %}
+                                              <input type="checkbox" disabled class="form-check-input" title="Already assigned">
+                                          {% endif %}
+                                      {% endif %}
+                                  </td>
+                                  <td><strong>{{ reg.application_number }}</strong></td>
+                                  <td>{{ reg.name }}<br><small class="text-muted">{{ reg.district }}</small></td>
+                                  <td>{{ reg.mobile }}</td>
+                                  <td>
+                                      {% if reg.student_profile.mentor %}
+                                          <span class="badge bg-info text-dark">{{ reg.student_profile.mentor.user.first_name }}</span>
+                                      {% else %}
+                                          <span class="text-muted small">None</span>
+                                      {% endif %}
+                                  </td>
+                                  <td>
+                                      {% if reg.is_paid %}
+                                          <span class="badge bg-success">Yes</span>
+                                      {% else %}
+                                          <span class="badge bg-danger">No</span>
+                                      {% endif %}
+                                  </td>
+                                  <td>
+                                      {% if reg.is_paid %}
+                                          <small class="text-muted">ID: {{ reg.transaction_id|default:"-" }}</small>
+                                      {% else %}
+                                          -
+                                      {% endif %}
+                                  </td>
+                              </tr>
+                              {% empty %}
+                              <tr>
+                                  <td colspan="7" class="text-center py-4 text-muted">No registrations found.</td>
+                              </tr>
+                              {% endfor %}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
+      </form>
+  </div>
+
+  <!-- MENTORS TAB -->
+  <div class="tab-pane fade" id="mentors" role="tabpanel">
+      <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+              <h5 class="mb-0 fw-bold">Mentors</h5>
+              <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addMentorModal">
+                  <i class="bi bi-plus-lg me-1"></i> Add Mentor
+              </button>
+          </div>
+          <div class="card-body p-0">
+              <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                      <tr>
+                          <th class="px-4 py-3">Name</th>
+                          <th class="px-4 py-3">Mobile (Username)</th>
+                          <th class="px-4 py-3 text-center">Assigned Students</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {% for mentor in mentors %}
+                      <tr>
+                          <td class="px-4 py-3 fw-bold">{{ mentor.user.first_name }}</td>
+                          <td class="px-4 py-3">{{ mentor.user.username }}</td>
+                          <td class="px-4 py-3 text-center">
+                              <span class="badge bg-primary rounded-pill px-3">{{ mentor.mentees.count }}</span>
+                          </td>
+                      </tr>
+                      {% empty %}
+                      <tr>
+                          <td colspan="3" class="text-center py-5 text-muted">No mentors created yet.</td>
+                      </tr>
+                      {% endfor %}
+                  </tbody>
+              </table>
+          </div>
+      </div>
+  </div>
+
+  <!-- CLASSES TAB -->
+  <div class="tab-pane fade" id="classes" role="tabpanel">
+      <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+              <h5 class="mb-0 fw-bold">Course Classes</h5>
+              <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                  <i class="bi bi-plus-lg me-1"></i> Add Class
+              </button>
+          </div>
+          <div class="card-body p-0">
+              <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                      <tr>
+                          <th class="px-4 py-3 text-center">Order</th>
+                          <th class="px-4 py-3">Title</th>
+                          <th class="px-4 py-3">YouTube ID</th>
+                          <th class="px-4 py-3 text-end">Action</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {% for c in course_classes %}
+                      <tr>
+                          <td class="px-4 py-3 text-center"><span class="badge bg-secondary">{{ c.order }}</span></td>
+                          <td class="px-4 py-3 fw-bold">{{ c.title }}</td>
+                          <td class="px-4 py-3 text-muted"><code>{{ c.youtube_video_id }}</code></td>
+                          <td class="px-4 py-3 text-end">
+                              <form method="POST" action="{% url 'admin_manage_class' %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this class?');">
+                                  {% csrf_token %}
+                                  <input type="hidden" name="action" value="delete">
+                                  <input type="hidden" name="class_id" value="{{ c.id }}">
+                                  <button type="submit" class="btn btn-outline-danger btn-sm rounded-circle"><i class="bi bi-trash"></i></button>
+                              </form>
+                          </td>
+                      </tr>
+                      {% empty %}
+                      <tr>
+                          <td colspan="4" class="text-center py-5 text-muted">No classes added yet.</td>
+                      </tr>
+                      {% endfor %}
+                  </tbody>
+              </table>
+          </div>
+      </div>
+  </div>
 </div>
+
+<!-- Add Mentor Modal -->
+<div class="modal fade" id="addMentorModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 rounded-4 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Add New Mentor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="{% url 'admin_manage_mentor' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold">Full Name</label>
+                <input type="text" name="name" class="form-control bg-light" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold">Mobile Number (Username)</label>
+                <input type="text" name="mobile" class="form-control bg-light" required>
+            </div>
+            <div class="mb-4">
+                <label class="form-label text-muted small fw-bold">Password</label>
+                <input type="password" name="password" class="form-control bg-light" required>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary rounded-pill">Create Mentor</button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Class Modal -->
+<div class="modal fade" id="addClassModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 rounded-4 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Add Course Class</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="{% url 'admin_manage_class' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add">
+            <div class="row">
+                <div class="col-md-9 mb-3">
+                    <label class="form-label text-muted small fw-bold">Class Title</label>
+                    <input type="text" name="title" class="form-control bg-light" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label text-muted small fw-bold">Order #</label>
+                    <input type="number" name="order" class="form-control bg-light" value="{{ course_classes.count|add:'1' }}" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold">YouTube Video ID</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-muted border-end-0">youtube.com/watch?v=</span>
+                    <input type="text" name="youtube_video_id" class="form-control bg-light border-start-0 ps-0" placeholder="dQw4w9WgXcQ" required>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label text-muted small fw-bold">Description (Optional)</label>
+                <textarea name="description" class="form-control bg-light" rows="3"></textarea>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary rounded-pill">Save Class</button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('selectAll').addEventListener('change', function(e) {
+        document.querySelectorAll('.student-checkbox').forEach(cb => {
+            cb.checked = e.target.checked;
+        });
+    });
+</script>
 {% endblock %}

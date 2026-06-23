@@ -1,4 +1,5 @@
 {% extends 'registration/base.html' %}
+{% load static %}
 
 {% block title %}Register - Online Dars{% endblock %}
 
@@ -49,6 +50,13 @@
                         {{ form.whatsapp }}
                     </div>
 
+                    <div id="qrCodeContainer" class="mb-3 text-center">
+                        <button type="button" class="btn btn-info mb-2" id="toggleQrBtn">OPEN QR CODE FOR PAYMENT (സ്കാൻ ചെയ്ത് പണമടക്കുക)</button>
+                        <div id="qrImageWrapper" style="display: none;">
+                            <img src="{% static 'img/DMIC PAY QR.jpeg' %}" alt="Payment QR Code" class="img-fluid" style="max-width: 300px; border: 1px solid #ccc; border-radius: 8px; padding: 10px;">
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Paid or Not</label>
                         {{ form.is_paid }}
@@ -64,7 +72,7 @@
                             {{ form.transaction_id }}
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Screenshot (Optional)</label>
+                            <label class="form-label">Screenshot (Compulsory)</label>
                             {{ form.screenshot }}
                         </div>
                     </div>
@@ -110,12 +118,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle payment fields visibility
     const isPaidSelect = document.getElementById('{{ form.is_paid.id_for_label }}');
     const paymentFields = document.getElementById('paymentFields');
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    const toggleQrBtn = document.getElementById('toggleQrBtn');
+    const qrImageWrapper = document.getElementById('qrImageWrapper');
+    const screenshotInput = document.getElementById('{{ form.screenshot.id_for_label }}');
+
+    if (toggleQrBtn) {
+        toggleQrBtn.addEventListener('click', function() {
+            if (qrImageWrapper.style.display === 'none') {
+                qrImageWrapper.style.display = 'block';
+                toggleQrBtn.textContent = 'HIDE QR CODE (ക്യൂആർ കോഡ് മറയ്ക്കുക)';
+            } else {
+                qrImageWrapper.style.display = 'none';
+                toggleQrBtn.textContent = 'OPEN QR CODE FOR PAYMENT (സ്കാൻ ചെയ്ത് പണമടക്കുക)';
+            }
+        });
+    }
 
     function togglePaymentFields() {
         if (isPaidSelect.value === 'True') {
             paymentFields.style.display = 'block';
+            screenshotInput.required = true;
         } else {
             paymentFields.style.display = 'none';
+            screenshotInput.required = false;
         }
     }
 

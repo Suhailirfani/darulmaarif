@@ -80,3 +80,11 @@ def create_student_user(sender, instance, created, **kwargs):
                 role='STUDENT',
                 registration=instance
             )
+
+class AppSetting(models.Model):
+    key = models.CharField(max_length=50, unique=True)
+    value_bool = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.key}: {self.value_bool}"
+

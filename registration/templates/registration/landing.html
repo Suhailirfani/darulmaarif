@@ -193,9 +193,18 @@
     <div class="col-lg-6 mb-4 mb-lg-0 animate-fade-in-up delay-1">
         <div class="mb-4 p-4 p-md-5 rounded-4 shadow-sm text-center arabic-pattern-bg d-flex flex-column justify-content-center align-items-center h-100">
             <img src="{% static 'img/NAME.png' %}" alt="അൽ മർഅ Online Dars" class="img-fluid mb-4" style="max-height: 200px;">
-            <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4 px-md-5 py-3 rounded-pill fw-bold shadow text-primary pulse-btn" style="color: #b10f54 !important; transition: transform 0.2s ease;">
-                REGISTER NOW
-            </a>
+            {% if is_locked %}
+                <button class="btn btn-secondary btn-lg px-4 px-md-5 py-3 rounded-pill fw-bold shadow text-muted" disabled style="cursor: not-allowed; opacity: 0.8;">
+                    REGISTRATION CLOSED
+                </button>
+                <div class="mt-3 badge bg-danger text-wrap px-3 py-2 fs-6 rounded-pill" style="font-family: 'Anek Malayalam', sans-serif;">
+                    <i class="bi bi-shield-lock-fill me-1"></i> രജിസ്ട്രേഷൻ താൽക്കാലികമായി നിർത്തിവെച്ചിരിക്കുന്നു
+                </div>
+            {% else %}
+                <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4 px-md-5 py-3 rounded-pill fw-bold shadow text-primary pulse-btn" style="color: #b10f54 !important; transition: transform 0.2s ease;">
+                    REGISTER NOW
+                </a>
+            {% endif %}
         </div>
         <p class="lead text-muted mb-4 px-2 animate-fade-in-up delay-2" style="line-height: 1.8;">
             പ്രമുഖ പണ്ഡിതരുടെയും അനുവാചക ലോകത്തിൻ്റെയും ശ്രദ്ധ പിടിച്ചുപറ്റിയ 150ലധികം ഗ്രന്ഥങ്ങൾ രചിച്ച, അനുഗ്രഹീത തൂലികയുടെ ഉടമയായ ശൈഖുനാ കോടമ്പുഴ ബാവ ഉസ്താദിൻ്റെ അൽ മർഅതു ഫീ ളിലാലിൽ ഇസ്ലാം (സ്ത്രീ ഇസ്ലാമിൻ്റെ ശീതളച്ഛായയിൽ) എന്ന ഗ്രന്ഥം ദർസി രൂപത്തിൽ ഓതി പഠിക്കാൻ സുവർണാവസരം.
@@ -260,8 +269,28 @@
     <!-- Left Column: Course Features Grid -->
     <div class="col-lg-8 mb-4">
         <div class="row g-4">
-            <!-- Feature 1: Authentic Learning -->
+            <!-- Feature 1: Prizes (Relocated and Redesigned for attraction) -->
             <div class="col-md-6 reveal-card delay-1">
+                <div class="card h-100 shadow-sm info-card p-3" style="background: linear-gradient(135deg, #b10f54, #8c0a41); color: white; border: none;">
+                    <div class="card-body d-flex align-items-start">
+                        <div class="icon-box me-3 flex-shrink-0" style="background-color: rgba(255, 215, 0, 0.2); color: #ffd700; border: 1px solid rgba(255, 215, 0, 0.4);">
+                            <i class="bi bi-trophy-fill fs-3"></i>
+                        </div>
+                        <div>
+                            <div class="badge bg-warning text-dark mb-2 fw-bold">ആകർഷകമായ സമ്മാനങ്ങൾ</div>
+                            <h5 class="fw-bold mb-2 text-white" style="font-family: 'Anek Malayalam', sans-serif;">പരീക്ഷയും സമ്മാനങ്ങളും</h5>
+                            <p class="text-white mb-0 small" style="line-height: 1.5; font-size: 0.85rem; opacity: 0.95;">
+                                കോഴ്സ് വിജയകരമായി പൂർത്തീകരിച്ചവർക്ക് പരീക്ഷയും വിജയികൾക്ക് സർട്ടിഫിക്കറ്റും താഴെ പറയുന്ന സമ്മാനങ്ങളും നൽകുന്നതാണ്:
+                                <br>• <strong>ഒന്നും രണ്ടും മൂന്നും സ്ഥാനക്കാർക്ക്</strong>: ₹10,000 രൂപയും ₹1,000 രൂപയുടെ ഗ്രന്ഥങ്ങളും.
+                                <br>• <strong>4 മുതൽ 10 വരെ സ്ഥാനക്കാർക്ക്</strong>: ₹10,000 രൂപയും (ഗ്രന്ഥങ്ങളും) അടുത്ത 10 സ്ഥാനക്കാർക്ക് ₹1,000 രൂപയുടെ ഗ്രന്ഥങ്ങളും.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 2: Authentic Learning -->
+            <div class="col-md-6 reveal-card delay-3">
                 <div class="card h-100 shadow-sm info-card p-3">
                     <div class="card-body d-flex align-items-start">
                         <div class="icon-box me-3 flex-shrink-0">
@@ -275,8 +304,8 @@
                 </div>
             </div>
             
-            <!-- Feature 2: Open for All -->
-            <div class="col-md-6 reveal-card delay-3">
+            <!-- Feature 3: Open for All -->
+            <div class="col-md-6 reveal-card delay-1">
                 <div class="card h-100 shadow-sm info-card p-3">
                     <div class="card-body d-flex align-items-start">
                         <div class="icon-box me-3 flex-shrink-0">
@@ -290,8 +319,8 @@
                 </div>
             </div>
 
-            <!-- Feature 3: Classes -->
-            <div class="col-md-6 reveal-card delay-1">
+            <!-- Feature 4: Classes -->
+            <div class="col-md-6 reveal-card delay-3">
                 <div class="card h-100 shadow-sm info-card p-3">
                     <div class="card-body d-flex align-items-start">
                         <div class="icon-box me-3 flex-shrink-0">
@@ -305,8 +334,8 @@
                 </div>
             </div>
 
-            <!-- Feature 4: Duration -->
-            <div class="col-md-6 reveal-card delay-3">
+            <!-- Feature 5: Duration -->
+            <div class="col-md-6 reveal-card delay-1">
                 <div class="card h-100 shadow-sm info-card p-3">
                     <div class="card-body d-flex align-items-start">
                         <div class="icon-box me-3 flex-shrink-0">
@@ -320,8 +349,8 @@
                 </div>
             </div>
 
-            <!-- Feature 5: Media -->
-            <div class="col-md-6 reveal-card delay-1">
+            <!-- Feature 6: Media -->
+            <div class="col-md-6 reveal-card delay-3">
                 <div class="card h-100 shadow-sm info-card p-3">
                     <div class="card-body d-flex align-items-start">
                         <div class="icon-box me-3 flex-shrink-0">
@@ -335,8 +364,8 @@
                 </div>
             </div>
 
-            <!-- Feature 6: Doubts -->
-            <div class="col-md-6 reveal-card delay-3">
+            <!-- Feature 7: Doubts -->
+            <div class="col-md-6 reveal-card delay-1">
                 <div class="card h-100 shadow-sm info-card p-3">
                     <div class="card-body d-flex align-items-start">
                         <div class="icon-box me-3 flex-shrink-0">
@@ -350,8 +379,8 @@
                 </div>
             </div>
 
-            <!-- Feature 7: Author Session -->
-            <div class="col-md-6 reveal-card delay-1">
+            <!-- Feature 8: Author Session -->
+            <div class="col-md-6 reveal-card delay-3">
                 <div class="card h-100 shadow-sm info-card p-3">
                     <div class="card-body d-flex align-items-start">
                         <div class="icon-box me-3 flex-shrink-0">
@@ -360,25 +389,6 @@
                         <div>
                             <h5 class="fw-bold mb-2 text-dark" style="font-family: 'Anek Malayalam', sans-serif;">അവലോകന ക്ലാസ്സ്</h5>
                             <p class="text-muted mb-0 small" style="line-height: 1.6;">കോഴ്സിന്റെ അവസാനത്തിൽ ഗ്രന്ഥകർത്താവ് ഖലമുൽ ഇസ്‌ലാം കോടമ്പുഴ ഉസ്താദിന്റെ പ്രത്യേക അവലോകന ക്ലാസ് ഉണ്ടായിരിക്കുന്നതാണ്.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Feature 8: Prizes -->
-            <div class="col-md-6 reveal-card delay-3">
-                <div class="card h-100 shadow-sm info-card p-3">
-                    <div class="card-body d-flex align-items-start">
-                        <div class="icon-box me-3 flex-shrink-0">
-                            <i class="bi bi-trophy-fill"></i>
-                        </div>
-                        <div>
-                            <h5 class="fw-bold mb-2 text-dark" style="font-family: 'Anek Malayalam', sans-serif;">പരീക്ഷയും സമ്മാനങ്ങളും</h5>
-                            <p class="text-muted mb-0 small" style="line-height: 1.5; font-size: 0.85rem;">
-                                കോഴ്സ് വിജയകരമായി പൂർത്തീകരിച്ചവർക്ക് പരീക്ഷയും വിജയികൾക്ക് സർട്ടിഫിക്കറ്റും താഴെ പറയുന്ന സമ്മാനങ്ങളും നൽകുന്നതാണ്:
-                                <br>• <strong>ഒന്നും രണ്ടും മൂന്നും സ്ഥാനക്കാർക്ക്</strong>: ₹10,000 രൂപയും ₹1,000 രൂപയുടെ ഗ്രന്ഥങ്ങളും.
-                                <br>• <strong>4 മുതൽ 10 വരെ സ്ഥാനക്കാർക്ക്</strong>: ₹10,000 രൂപയും (ഗ്രന്ഥങ്ങളും) അടുത്ത 10 സ്ഥാനക്കാർക്ക് ₹1,000 രൂപയുടെ ഗ്രന്ഥങ്ങളും.
-                            </p>
                         </div>
                     </div>
                 </div>

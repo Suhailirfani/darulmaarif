@@ -2,16 +2,22 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .models import Registration, CourseClass, StudentProgress, UserProfile
+from .models import Registration, CourseClass, StudentProgress, UserProfile, AppSetting
 from .forms import RegistrationForm
 import csv
 from datetime import datetime
 import openpyxl
 
 def landing_view(request):
-    return render(request, 'registration/landing.html')
+    reg_setting, _ = AppSetting.objects.get_or_create(key='registration_locked', defaults={'value_bool': False})
+    is_locked = reg_setting.value_bool
+    return render(request, 'registration/landing.html', {'is_locked': is_locked})
 
 def register_view(request):
+    is_locked = AppSetting.objects.filter(key='registration_locked', value_bool=True).exists()
+    if is_locked:
+        return redirect('landing')
+        
     if request.method == 'POST':
         form = RegistrationForm(request.POST, request.FILES)
         if form.is_valid():
@@ -55,6 +61,9 @@ def admin_dashboard_view(request):
     course_classes = CourseClass.objects.all().order_by('order')
     students = UserProfile.objects.filter(role='STUDENT')
     
+    reg_setting, _ = AppSetting.objects.get_or_create(key='registration_locked', defaults={'value_bool': False})
+    is_locked = reg_setting.value_bool
+    
     context = {
         'registrations': registrations,
         'total_registered': total_registered,
@@ -62,8 +71,21 @@ def admin_dashboard_view(request):
         'mentors': mentors,
         'course_classes': course_classes,
         'students': students,
+        'is_locked': is_locked,
     }
     return render(request, 'registration/dashboard.html', context)
+
+@login_required
+def admin_toggle_lock_view(request):
+    if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
+        return redirect('landing')
+        
+    if request.method == 'POST':
+        is_locked_val = request.POST.get('is_locked') == 'on'
+        AppSetting.objects.update_or_create(key='registration_locked', defaults={'value_bool': is_locked_val})
+        
+    return redirect('admin_dashboard')
+
 
 @login_required
 def admin_manage_class_view(request):

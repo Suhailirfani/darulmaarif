@@ -16,10 +16,21 @@ class Registration(models.Model):
     transaction_id = models.CharField(max_length=100, blank=True, null=True)
     screenshot = models.ImageField(upload_to='screenshots/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    application_num = models.PositiveIntegerField(unique=True, null=True, blank=True)
 
     @property
     def application_number(self):
-        return f"{self.id:03d}" if self.id else ""
+        return f"{self.application_num:03d}" if self.application_num else ""
+
+    def save(self, *args, **kwargs):
+        if not self.application_num:
+            # Find the smallest available positive integer gap starting from 1
+            existing_numbers = set(Registration.objects.values_list('application_num', flat=True))
+            num = 1
+            while num in existing_numbers:
+                num += 1
+            self.application_num = num
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"APP-{self.application_number} : {self.name} - {self.mobile}"

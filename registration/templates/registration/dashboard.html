@@ -190,6 +190,9 @@
                                       {% endif %}
                                   </td>
                                   <td class="text-end">
+                                      <a href="{% url 'admin_print_registration' reg.id %}" target="_blank" class="btn btn-outline-success btn-sm rounded-circle py-0 px-1 me-1" title="Print Applicant Slip" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
+                                          <i class="bi bi-printer" style="font-size: 0.85rem;"></i>
+                                      </a>
                                       <button type="button" class="btn btn-outline-primary btn-sm rounded-circle py-0 px-1 me-1" data-bs-toggle="modal" data-bs-target="#editRegModal{{ reg.id }}" title="Edit Applicant" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;"><i class="bi bi-pencil" style="font-size: 0.85rem;"></i></button>
                                       <button type="button" onclick="submitSingleDelete('{{ reg.id }}')" class="btn btn-outline-danger btn-sm rounded-circle py-0 px-1" title="Delete Applicant" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;"><i class="bi bi-trash" style="font-size: 0.85rem;"></i></button>
                                   </td>

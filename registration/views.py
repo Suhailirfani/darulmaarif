@@ -252,6 +252,13 @@ def admin_edit_registration_view(request):
     return redirect('admin_dashboard')
 
 @login_required
+def admin_print_registration_view(request, pk):
+    if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
+        return redirect('landing')
+    reg = get_object_or_404(Registration, pk=pk)
+    return render(request, 'registration/print_registration.html', {'reg': reg})
+
+@login_required
 def export_excel_view(request):
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename=registrations_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'

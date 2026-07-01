@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicant Slip - APP-{{ reg.application_number }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@700;800&family=Noto+Serif+Malayalam:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Anek Malayalam', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+        .slip-container {
+            max-width: 650px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+        .slip-header {
+            text-align: center;
+            border-bottom: 2px solid #4d0b5a;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .slip-title {
+            color: #4d0b5a;
+            font-family: 'Anek Malayalam', sans-serif;
+            font-weight: 800;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        .slip-subtitle {
+            color: #b10f54;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        .app-number-box {
+            background-color: rgba(77, 11, 90, 0.08);
+            color: #4d0b5a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin: 15px 0;
+            border: 1px dashed #4d0b5a;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f1f1;
+        }
+        .detail-label {
+            font-weight: 700;
+            color: #666;
+            width: 35%;
+        }
+        .detail-value {
+            color: #111;
+            width: 65%;
+            text-align: left;
+            font-weight: 500;
+        }
+        .screenshot-preview {
+            max-width: 250px;
+            max-height: 250px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 5px;
+        }
+        .action-bar {
+            max-width: 650px;
+            margin: 20px auto 0 auto;
+            display: flex;
+            justify-content: space-between;
+        }
+        @media print {
+            body {
+                background-color: #fff;
+            }
+            .slip-container {
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                border: none;
+                max-width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="action-bar no-print">
+        <a href="javascript:window.close();" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-x-lg me-2"></i> Close Window
+        </a>
+        <button onclick="window.print();" class="btn btn-primary rounded-pill px-4" style="background: linear-gradient(135deg, #4d0b5a, #b10f54); border: none;">
+            <i class="bi bi-printer me-2"></i> Print Slip
+        </button>
+    </div>
+
+    <div class="slip-container">
+        <div class="slip-header">
+            <div class="slip-title">അൽ മർഅ Online Dars</div>
+            <div class="slip-subtitle">Darul Ma'arif Publication Trust</div>
+            <div class="app-number-box">APP-{{ reg.application_number }}</div>
+        </div>
+
+        <div class="slip-body">
+            <div class="detail-row">
+                <div class="detail-label">Name (പേര്)</div>
+                <div class="detail-value">{{ reg.name }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">House Name (വീട്ടുപേര്)</div>
+                <div class="detail-value">{{ reg.house_name }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Place (സ്ഥലം)</div>
+                <div class="detail-value">{{ reg.place }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Post (പോസ്റ്റ്)</div>
+                <div class="detail-value">{{ reg.post }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">District (ജില്ല)</div>
+                <div class="detail-value">{{ reg.district }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Mobile (ഫോൺ നമ്പർ)</div>
+                <div class="detail-value">{{ reg.mobile }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">WhatsApp (വാട്സാപ്പ്)</div>
+                <div class="detail-value">{{ reg.whatsapp }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Payment Status (ഫീസ് അടച്ചോ)</div>
+                <div class="detail-value">
+                    {% if reg.is_paid %}
+                        <span class="badge bg-success text-white">PAID (അടച്ചു)</span>
+                    {% else %}
+                        <span class="badge bg-danger text-white">PENDING (അടച്ചിട്ടില്ല)</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if reg.is_paid %}
+                <div class="detail-row">
+                    <div class="detail-label">Transaction Date (തീയതി)</div>
+                    <div class="detail-value">{{ reg.transaction_time_and_date|date:"d-m-Y H:i" }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Transaction ID (ഐഡി)</div>
+                    <div class="detail-value">{{ reg.transaction_id|default:"-" }}</div>
+                </div>
+                {% if reg.screenshot %}
+                    <div class="detail-row flex-column align-items-start">
+                        <div class="detail-label w-100 mb-2">Screenshot (സ്ക്രീൻഷോട്ട്)</div>
+                        <div class="detail-value w-100">
+                            <img src="{{ reg.screenshot.url }}" alt="Screenshot Preview" class="screenshot-preview img-fluid">
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html>

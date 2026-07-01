@@ -44,6 +44,7 @@
                 
                 <p class="lead text-muted mb-4">Thank you for registering for the Online Dars.</p>
                 
+                {% if reg.is_paid %}
                 <div class="mb-4 p-3 bg-light rounded-4 border">
                     <p class="text-dark fw-bold mb-2">Important Next Step:</p>
                     <p class="text-muted small mb-3">Please join our official WhatsApp group to receive class updates and announcements.</p>
@@ -51,6 +52,7 @@
                         <i class="bi bi-whatsapp me-2"></i>Join WhatsApp Group
                     </a>
                 </div>
+                {% endif %}
                 <a href="{% url 'register' %}" class="btn btn-outline-primary w-100 mb-2">Register Another Person</a>
                 <a href="{% url 'landing' %}" class="btn btn-light w-100">Back to Home</a>
             </div>

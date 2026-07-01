@@ -15,6 +15,16 @@ class RegistrationForm(forms.ModelForm):
             'screenshot': forms.ClearableFileInput(attrs={'accept': 'image/*'}),
         }
 
+    def clean_mobile(self):
+        mobile = self.cleaned_data.get('mobile')
+        if mobile:
+            qs = Registration.objects.filter(mobile=mobile)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("ഈ ഫോൺ നമ്പർ ഇതിനകം രജിസ്റ്റർ ചെയ്തതാണ്. (This phone number is already registered.)")
+        return mobile
+
     def clean(self):
         cleaned_data = super().clean()
         is_paid = cleaned_data.get('is_paid')

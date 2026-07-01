@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.contrib.auth.models import User
 from .models import Registration, CourseClass, StudentProgress, UserProfile, AppSetting
 from .forms import RegistrationForm
@@ -223,12 +224,18 @@ def admin_edit_registration_view(request):
         reg = get_object_or_404(Registration, id=reg_id)
         
         old_mobile = reg.mobile
+        new_mobile = request.POST.get('mobile', reg.mobile).strip()
+        
+        if old_mobile != new_mobile and Registration.objects.filter(mobile=new_mobile).exists():
+            messages.error(request, f"കഴിയുന്നില്ല: {new_mobile} എന്ന ഫോൺ നമ്പർ ഇതിനകം മറ്റൊരു അപേക്ഷകൻ രജിസ്റ്റർ ചെയ്തിട്ടുണ്ട്. (Cannot update: The mobile number {new_mobile} is already registered by another applicant.)")
+            return redirect('admin_dashboard')
+            
         reg.name = request.POST.get('name', reg.name)
         reg.house_name = request.POST.get('house_name', reg.house_name)
         reg.place = request.POST.get('place', reg.place)
         reg.post = request.POST.get('post', reg.post)
         reg.district = request.POST.get('district', reg.district)
-        reg.mobile = request.POST.get('mobile', reg.mobile)
+        reg.mobile = new_mobile
         reg.whatsapp = request.POST.get('whatsapp', reg.whatsapp)
         
         reg.save()

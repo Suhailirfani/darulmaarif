@@ -604,13 +604,18 @@
         } else {
             message = `പ്രിയപ്പെട്ട ${name},\n` +
                       `അൽ മർഅ ഓൺലൈൻ ദർസിലേക്കുള്ള നിങ്ങളുടെ രജിസ്ട്രേഷൻ അപേക്ഷ ലഭിച്ചിട്ടുണ്ട്. എന്നാൽ നിങ്ങളുടെ പേയ്‌മെന്റ് പൂർത്തിയായിട്ടില്ല.\n\n` +
+                      `അപേക്ഷാ നമ്പർ: APP-${appNo}\n` +
+                      `യൂസർ നെയിം: ${mobile}\n` +
+                      `പാസ്‌വേഡ്: APP-${appNo}\n\n` +
                       `ഫീസ് വിവരങ്ങൾ:\n` +
                       `• പ്രവേശന ഫീസ്: ₹100\n` +
                       `• കിത്താബ്: ₹150\n` +
                       `• ഗൈഡ് ബുക്ക്: ₹100\n` +
                       `• ആകെ തുക: ₹350 (കിത്താബ് തപാൽ വഴി ആവശ്യമുള്ളവർ തപാൽ ചാർജ് ₹50 ഉൾപ്പെടെ ₹400 അടക്കേണ്ടതാണ്)\n\n` +
                       `ദയവായി എത്രയും വേഗം പേയ്‌മെന്റ് പൂർത്തിയാക്കി അതിന്റെ സ്ക്രീൻഷോട്ട് ഇതേ നമ്പറിലേക്ക് അയക്കുക.\n\n` +
-                      `Your registration is received, but payment is pending. Please complete the payment and send the screenshot.`;
+                      `Your registration is received, but payment is pending. Please complete the payment and send the screenshot.\n` +
+                      `Username: ${mobile}\n` +
+                      `Password: APP-${appNo}`;
         }
         
         let cleanMobile = mobile.replace(/[^0-9]/g, '');

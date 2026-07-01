@@ -209,6 +209,9 @@
                                           {% endif %}
                                       </td>
                                       <td class="text-end text-nowrap">
+                                          <button type="button" onclick="sendWhatsAppMessage('{{ reg.mobile }}', '{{ reg.name|escapejs }}', '{{ reg.application_number }}', '{{ reg.is_paid }}')" class="btn btn-outline-success btn-sm rounded-circle py-0 px-1 me-1" title="Send WhatsApp Message" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-color: #25D366; color: #25D366;">
+                                              <i class="bi bi-whatsapp" style="font-size: 0.85rem;"></i>
+                                          </button>
                                           <a href="{% url 'admin_print_registration' reg.id %}" target="_blank" class="btn btn-outline-success btn-sm rounded-circle py-0 px-1 me-1" title="Print Applicant Slip" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
                                               <i class="bi bi-printer" style="font-size: 0.85rem;"></i>
                                           </a>
@@ -271,6 +274,9 @@
                                           -
                                       </td>
                                       <td class="text-end text-nowrap">
+                                          <button type="button" onclick="sendWhatsAppMessage('{{ reg.mobile }}', '{{ reg.name|escapejs }}', '{{ reg.application_number }}', '{{ reg.is_paid }}')" class="btn btn-outline-success btn-sm rounded-circle py-0 px-1 me-1" title="Send WhatsApp Message" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-color: #25D366; color: #25D366;">
+                                              <i class="bi bi-whatsapp" style="font-size: 0.85rem;"></i>
+                                          </button>
                                           <a href="{% url 'admin_print_registration' reg.id %}" target="_blank" class="btn btn-outline-success btn-sm rounded-circle py-0 px-1 me-1" title="Print Applicant Slip" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
                                               <i class="bi bi-printer" style="font-size: 0.85rem;"></i>
                                           </a>
@@ -580,6 +586,42 @@
 
 {% block scripts %}
 <script>
+    // Construct and open WhatsApp chat to applicant
+    function sendWhatsAppMessage(mobile, name, appNo, isPaid) {
+        let message = "";
+        if (isPaid === 'True') {
+            message = `പ്രിയപ്പെട്ട ${name},\n` +
+                      `അൽ മർഅ ഓൺലൈൻ ദർസ് രജിസ്ട്രേഷൻ വിജയകരമായി പൂർത്തിയായിരിക്കുന്നു.\n` +
+                      `അപേക്ഷാ നമ്പർ: APP-${appNo}\n` +
+                      `യൂസർ നെയിം: ${mobile}\n` +
+                      `പാസ്‌വേഡ്: APP-${appNo}\n\n` +
+                      `പഠന ക്ലാസുകൾ ലഭ്യമാകുന്നതിനായി താഴെ പറയുന്ന ഔദ്യോഗിക വാട്സാപ്പ് ഗ്രൂപ്പിൽ ജോയിൻ ചെയ്യുക:\n` +
+                      `https://chat.whatsapp.com/Cp6Jh0dZx9EDGC6n9agNlB\n\n` +
+                      `നിങ്ങളുടെ അപേക്ഷാ നമ്പർ എപ്പോഴും സൂക്ഷിച്ചു വെക്കുക.\n\n` +
+                      `Registration Successful!\n` +
+                      `Username: ${mobile}\n` +
+                      `Password: APP-${appNo}`;
+        } else {
+            message = `പ്രിയപ്പെട്ട ${name},\n` +
+                      `അൽ മർഅ ഓൺലൈൻ ദർസിലേക്കുള്ള നിങ്ങളുടെ രജിസ്ട്രേഷൻ അപേക്ഷ ലഭിച്ചിട്ടുണ്ട്. എന്നാൽ നിങ്ങളുടെ പേയ്‌മെന്റ് പൂർത്തിയായിട്ടില്ല.\n\n` +
+                      `ഫീസ് വിവരങ്ങൾ:\n` +
+                      `• പ്രവേശന ഫീസ്: ₹100\n` +
+                      `• കിത്താബ്: ₹150\n` +
+                      `• ഗൈഡ് ബുക്ക്: ₹100\n` +
+                      `• ആകെ തുക: ₹350 (കിത്താബ് തപാൽ വഴി ആവശ്യമുള്ളവർ തപാൽ ചാർജ് ₹50 ഉൾപ്പെടെ ₹400 അടക്കേണ്ടതാണ്)\n\n` +
+                      `ദയവായി എത്രയും വേഗം പേയ്‌മെന്റ് പൂർത്തിയാക്കി അതിന്റെ സ്ക്രീൻഷോട്ട് ഇതേ നമ്പറിലേക്ക് അയക്കുക.\n\n` +
+                      `Your registration is received, but payment is pending. Please complete the payment and send the screenshot.`;
+        }
+        
+        let cleanMobile = mobile.replace(/[^0-9]/g, '');
+        if (cleanMobile.length === 10) {
+            cleanMobile = "91" + cleanMobile;
+        }
+        
+        const url = "https://wa.me/" + cleanMobile + "?text=" + encodeURIComponent(message);
+        window.open(url, '_blank');
+    }
+
     // Select all checkbox logic for Paid table
     const selectAllPaid = document.getElementById('selectAllPaid');
     if (selectAllPaid) {

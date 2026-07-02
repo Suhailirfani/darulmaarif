@@ -125,7 +125,7 @@ def admin_dashboard_view(request):
     pending_regs = all_regs.filter(is_paid=False).filter(Q(screenshot='') | Q(screenshot__isnull=True))
     total_pending = pending_regs.count()
     
-    registrations = all_regs.exclude(id__in=pending_regs).order_by('-created_at')
+    registrations = all_regs.exclude(id__in=pending_regs).order_by('application_num')
     
     mentors = UserProfile.objects.filter(role='MENTOR')
     course_classes = CourseClass.objects.all().order_by('order')

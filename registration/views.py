@@ -151,7 +151,7 @@ def admin_pending_payments_view(request):
     if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
         return redirect('landing')
         
-    registrations = Registration.objects.filter(is_paid=False).filter(Q(screenshot='') | Q(screenshot__isnull=True)).order_by('-created_at')
+    registrations = Registration.objects.filter(is_paid=False).filter(Q(screenshot='') | Q(screenshot__isnull=True)).order_by('application_num')
     mentors = UserProfile.objects.filter(role='MENTOR')
     
     context = {

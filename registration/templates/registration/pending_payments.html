@@ -95,6 +95,9 @@
                                         <a href="{% url 'admin_print_registration' reg.id %}" target="_blank" class="btn btn-outline-success btn-sm rounded-circle py-0 px-1 me-1" title="Print Applicant Slip" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
                                             <i class="bi bi-printer" style="font-size: 0.85rem;"></i>
                                         </a>
+                                        <button type="button" onclick="approveManualPayment('{{ reg.id }}')" class="btn btn-outline-success btn-sm rounded-circle py-0 px-1 me-1" title="Approve Payment" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-color: #198754; color: #198754;">
+                                            <i class="bi bi-check-lg" style="font-size: 0.85rem;"></i>
+                                        </button>
                                         <button type="button" class="btn btn-outline-primary btn-sm rounded-circle py-0 px-1 me-1" data-bs-toggle="modal" data-bs-target="#editRegModal{{ reg.id }}" title="Edit Applicant" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
                                             <i class="bi bi-pencil" style="font-size: 0.85rem;"></i>
                                         </button>
@@ -181,6 +184,11 @@
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="student_ids" id="singleDeleteId" value="">
 </form>
+
+<form id="approvePaymentForm" method="POST" action="{% url 'admin_verify_payment' %}" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="reg_id" id="approvePaymentId" value="">
+</form>
 {% endblock %}
 
 {% block scripts %}
@@ -234,6 +242,13 @@
                 }
             });
         });
+    }
+
+    function approveManualPayment(id) {
+        if (confirm('Are you sure you want to approve this applicant\'s payment manually?')) {
+            document.getElementById('approvePaymentId').value = id;
+            document.getElementById('approvePaymentForm').submit();
+        }
     }
 
     function submitSingleDelete(id) {

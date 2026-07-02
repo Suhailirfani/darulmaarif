@@ -1,0 +1,97 @@
+{% extends 'registration/base.html' %}
+{% load static %}
+
+{% block title %}Complete Registration - Online Dars{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-5 border-0 rounded-4 overflow-hidden">
+            <div class="card-header text-center py-4 text-white" style="background: linear-gradient(135deg, #4d0b5a, #b10f54);">
+                <h3 class="mb-0 fw-bold">അവസാന ഘട്ടം: പേയ്‌മെന്റ് പൂർത്തിയാക്കുക</h3>
+                <p class="mb-0 text-white-50 mt-1" style="font-size: 0.9rem;">Final Step: Complete Your Registration by Paying</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                
+                <div class="alert alert-info rounded-4 border-0 p-3 mb-4 text-start shadow-sm" style="font-family: 'Anek Malayalam', sans-serif; background-color: #f0f9ff; border-left: 5px solid #0284c7 !important;">
+                    <h6 class="fw-bold mb-2" style="color: #0369a1;"><i class="bi bi-info-circle-fill me-1"></i> പ്രധാന അറിയിപ്പ് (Important Notice)</h6>
+                    <p class="mb-0 text-muted small" style="line-height: 1.6;">
+                        താങ്കൾ നൽകിയ വിവരങ്ങൾ താൽക്കാലികമായി രേഖപ്പെടുത്തിയിട്ടുണ്ട്. പ്രവേശനം വിജയകരമായി പൂർത്തിയാകുന്നതിന് താഴെ പറയുന്ന QR കോഡ് സ്കാൻ ചെയ്തോ ബാങ്ക് വിവരങ്ങൾ വഴിയോ ഫീസ് അടച്ച് അതിന്റെ രസീത്/സ്ക്രീൻഷോട്ട് ഇവിടെ അപ്‌ലോഡ് ചെയ്യേണ്ടതാണ്.
+                        <br>
+                        മറ്റു ഫീസുകൾ ഒന്നും തന്നെ ഈടാക്കുന്നതല്ല.
+                        <br><br>
+                        <em>Your details are temporarily recorded. To complete the registration, please scan the QR code below or transfer the fees and upload the screenshot. No other fees will be charged.</em>
+                    </p>
+                </div>
+
+                <!-- Fee breakdown Details -->
+                <div class="bg-light p-3 rounded-4 mb-4 border text-start">
+                    <p class="fw-bold text-dark mb-2"><i class="bi bi-receipt me-1"></i> ഫീസ് (Fees):</p>
+                    <ul class="mb-0 text-muted small ps-3">
+                        <li class="text-dark"><strong>ആകെ തുക: ₹400</strong></li>
+                    </ul>
+                </div>
+
+                <!-- QR payment and Instructions -->
+                <div class="text-center my-4 p-4 bg-white border rounded-4 shadow-xs">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-qr-code-scan me-1 text-brand"></i> സ്കാൻ ചെയ്ത് പണമടക്കുക (Scan & Pay)</h6>
+                    <img src="{% static 'img/DMIC PAY QR.jpeg' %}" alt="Payment QR Code" class="img-fluid rounded mb-3 shadow" style="max-width: 250px; border: 1px solid #ddd; padding: 10px;">
+                    <p class="text-muted small mb-0">Google Pay, PhonePe, Paytm അല്ലെങ്കിൽ മറ്റേതെങ്കിലും UPI ആപ്പുകൾ ഉപയോഗിച്ച് മുകളിലെ QR കോഡ് സ്കാൻ ചെയ്യാവുന്നതാണ്.</p>
+                </div>
+
+                {% if form.errors %}
+                <div class="alert alert-danger rounded-4 p-3 mb-4" role="alert" style="font-family: 'Anek Malayalam', sans-serif;">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i> ദയവായി താഴെ പറയുന്ന തെറ്റുകൾ തിരുത്തുക: (Please correct the following errors:)</h6>
+                    <ul class="mb-0 small">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li><strong>{{ field.label|default:field.name }}:</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- Form starts here -->
+                <form method="post" enctype="multipart/form-data" class="text-start mt-4">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">Transaction Time and Date (പണമടച്ച തീയതിയും സമയവും) <span class="text-danger">*</span></label>
+                        {{ form.transaction_time_and_date }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">Transaction ID / UTR (ട്രാൻസാക്ഷൻ ഐഡി - Optional)</label>
+                        {{ form.transaction_id }}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small">Screenshot of Payment (പേയ്‌മെന്റ് സ്ക്രീൻഷോട്ട്) <span class="text-danger">*</span></label>
+                        {{ form.screenshot }}
+                        <div class="form-text text-muted">UPI പെയ്മെന്റ് പൂർത്തിയാക്കിയതിന്റെ സ്ക്രീൻഷോട്ട് ഇവിടെ അപ്‌ലോഡ് ചെയ്യുക. (Upload UPI payment screenshot here.)</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold text-white shadow" style="background: linear-gradient(135deg, #4d0b5a, #b10f54); border: none;">
+                            രജിസ്ട്രേഷൻ പൂർത്തിയാക്കുക (Complete Registration)
+                        </button>
+                        <a href="{% url 'register' %}" class="btn btn-light rounded-pill btn-sm text-muted mt-2">വിവരങ്ങൾ തിരുത്തുക (Edit Personal Info)</a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add form-control class to all inputs
+    const inputs = document.querySelectorAll('input:not([type="checkbox"]), select');
+    inputs.forEach(input => input.classList.add('form-control'));
+});
+</script>
+{% endblock %}

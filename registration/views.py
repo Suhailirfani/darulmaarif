@@ -4,10 +4,17 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
 from .models import Registration, CourseClass, StudentProgress, UserProfile, AppSetting
-from .forms import RegistrationForm
+from .forms import RegistrationForm, PaymentCompletionForm
 import csv
 from datetime import datetime
 import openpyxl
+from django.db.models import Q
+
+def redirect_to_referer_or_dashboard(request):
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    return redirect('admin_dashboard')
 
 def landing_view(request):
     reg_setting, _ = AppSetting.objects.get_or_create(key='registration_locked', defaults={'value_bool': False})
@@ -22,13 +29,70 @@ def register_view(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST, request.FILES)
         if form.is_valid():
-            registration = form.save(commit=False)
-            registration.is_paid = False # Force to False so admin has to verify screenshot
-            registration.save()
-            return redirect('register_success', pk=registration.pk)
+            is_paid_val = form.cleaned_data.get('is_paid')
+            if is_paid_val:
+                registration = form.save(commit=False)
+                registration.is_paid = False # Force to False so admin has to verify screenshot
+                registration.save()
+                return redirect('register_success', pk=registration.pk)
+            else:
+                data = {
+                    'name': form.cleaned_data.get('name'),
+                    'house_name': form.cleaned_data.get('house_name'),
+                    'place': form.cleaned_data.get('place'),
+                    'post': form.cleaned_data.get('post'),
+                    'district': form.cleaned_data.get('district'),
+                    'mobile': form.cleaned_data.get('mobile'),
+                    'whatsapp': form.cleaned_data.get('whatsapp'),
+                }
+                request.session['temp_registration'] = data
+                return redirect('complete_payment')
     else:
         form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form})
+
+def complete_payment_view(request):
+    is_locked = AppSetting.objects.filter(key='registration_locked', value_bool=True).exists()
+    if is_locked:
+        return redirect('landing')
+
+    temp_data = request.session.get('temp_registration')
+    if not temp_data:
+        return redirect('register')
+
+    if request.method == 'POST':
+        form = PaymentCompletionForm(request.POST, request.FILES)
+        if form.is_valid():
+            mobile = temp_data.get('mobile')
+            if Registration.objects.filter(mobile=mobile).exists():
+                messages.error(request, "ഈ ഫോൺ നമ്പർ ഇതിനകം രജിസ്റ്റർ ചെയ്തതാണ്. (This phone number is already registered.)")
+                return redirect('register')
+
+            registration = Registration(
+                name=temp_data['name'],
+                house_name=temp_data['house_name'],
+                place=temp_data['place'],
+                post=temp_data['post'],
+                district=temp_data['district'],
+                mobile=temp_data['mobile'],
+                whatsapp=temp_data['whatsapp'],
+                is_paid=False,  # Needs admin verification
+                transaction_time_and_date=form.cleaned_data['transaction_time_and_date'],
+                transaction_id=form.cleaned_data['transaction_id'],
+                screenshot=request.FILES['screenshot']
+            )
+            registration.save()
+            
+            del request.session['temp_registration']
+            
+            return redirect('register_success', pk=registration.pk)
+    else:
+        form = PaymentCompletionForm()
+
+    return render(request, 'registration/complete_payment.html', {
+        'form': form,
+        'temp_data': temp_data
+    })
 
 def register_success(request, pk):
     reg = get_object_or_404(Registration, pk=pk)
@@ -54,9 +118,14 @@ def admin_dashboard_view(request):
     if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
         return redirect('landing')
         
-    registrations = Registration.objects.all().order_by('-created_at')
-    total_registered = registrations.count()
-    total_paid = registrations.filter(is_paid=True).count()
+    all_regs = Registration.objects.all()
+    total_registered = all_regs.count()
+    total_paid = all_regs.filter(is_paid=True).count()
+    
+    pending_regs = all_regs.filter(is_paid=False).filter(Q(screenshot='') | Q(screenshot__isnull=True))
+    total_pending = pending_regs.count()
+    
+    registrations = all_regs.exclude(id__in=pending_regs).order_by('-created_at')
     
     mentors = UserProfile.objects.filter(role='MENTOR')
     course_classes = CourseClass.objects.all().order_by('order')
@@ -69,12 +138,27 @@ def admin_dashboard_view(request):
         'registrations': registrations,
         'total_registered': total_registered,
         'total_paid': total_paid,
+        'total_pending': total_pending,
         'mentors': mentors,
         'course_classes': course_classes,
         'students': students,
         'is_locked': is_locked,
     }
     return render(request, 'registration/dashboard.html', context)
+
+@login_required
+def admin_pending_payments_view(request):
+    if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
+        return redirect('landing')
+        
+    registrations = Registration.objects.filter(is_paid=False).filter(Q(screenshot='') | Q(screenshot__isnull=True)).order_by('-created_at')
+    mentors = UserProfile.objects.filter(role='MENTOR')
+    
+    context = {
+        'registrations': registrations,
+        'mentors': mentors,
+    }
+    return render(request, 'registration/pending_payments.html', context)
 
 @login_required
 def admin_toggle_lock_view(request):
@@ -170,7 +254,7 @@ def admin_assign_students_view(request):
         student_ids = request.POST.getlist('student_ids') # These are now Registration IDs
         
         if not student_ids:
-            return redirect('admin_dashboard')
+            return redirect_to_referer_or_dashboard(request)
             
         if action == 'assign':
             mentor_id = request.POST.get('mentor_id')
@@ -189,7 +273,7 @@ def admin_assign_students_view(request):
                     os.remove(reg.screenshot.path)
                 reg.delete()
                 
-    return redirect('admin_dashboard')
+    return redirect_to_referer_or_dashboard(request)
 
 import os
 
@@ -212,7 +296,7 @@ def admin_verify_payment_view(request):
                 reg.screenshot = None
                 reg.save()
                 
-    return redirect('admin_dashboard')
+    return redirect_to_referer_or_dashboard(request)
 
 @login_required
 def admin_edit_registration_view(request):
@@ -228,7 +312,7 @@ def admin_edit_registration_view(request):
         
         if old_mobile != new_mobile and Registration.objects.filter(mobile=new_mobile).exists():
             messages.error(request, f"കഴിയുന്നില്ല: {new_mobile} എന്ന ഫോൺ നമ്പർ ഇതിനകം മറ്റൊരു അപേക്ഷകൻ രജിസ്റ്റർ ചെയ്തിട്ടുണ്ട്. (Cannot update: The mobile number {new_mobile} is already registered by another applicant.)")
-            return redirect('admin_dashboard')
+            return redirect_to_referer_or_dashboard(request)
             
         reg.name = request.POST.get('name', reg.name)
         reg.house_name = request.POST.get('house_name', reg.house_name)
@@ -249,7 +333,7 @@ def admin_edit_registration_view(request):
             except User.DoesNotExist:
                 pass
                 
-    return redirect('admin_dashboard')
+    return redirect_to_referer_or_dashboard(request)
 
 @login_required
 def admin_print_registration_view(request, pk):

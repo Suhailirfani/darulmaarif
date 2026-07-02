@@ -34,3 +34,16 @@ class RegistrationForm(forms.ModelForm):
             self.add_error('screenshot', 'Screenshot is required when Paid or Not is Yes.')
         
         return cleaned_data
+
+class PaymentCompletionForm(forms.Form):
+    transaction_time_and_date = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        required=True,
+        label="Transaction Time and Date"
+    )
+    transaction_id = forms.CharField(max_length=100, required=False, label="Transaction ID")
+    screenshot = forms.ImageField(
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+        required=True,
+        label="Screenshot"
+    )

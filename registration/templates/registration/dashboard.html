@@ -4,19 +4,34 @@
 
 {% block content %}
 <div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card text-white bg-primary mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Total Registered</h5>
-                <p class="card-text display-4">{{ total_registered }}</p>
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3 shadow-sm border-0 rounded-4">
+            <div class="card-body py-4">
+                <h6 class="card-title text-uppercase fw-bold text-white-50 mb-2">Total Registered</h6>
+                <p class="card-text display-5 fw-bold mb-0">{{ total_registered }}</p>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card text-white bg-success mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Total Paid</h5>
-                <p class="card-text display-4">{{ total_paid }}</p>
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3 shadow-sm border-0 rounded-4">
+            <div class="card-body py-4">
+                <h6 class="card-title text-uppercase fw-bold text-white-50 mb-2">Total Paid</h6>
+                <p class="card-text display-5 fw-bold mb-0">{{ total_paid }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-danger mb-3 shadow-sm border-0 rounded-4">
+            <div class="card-body py-4 d-flex flex-column justify-content-between h-100">
+                <div>
+                    <h6 class="card-title text-uppercase fw-bold text-white-50 mb-2">Pending Payments</h6>
+                    <p class="card-text display-5 fw-bold mb-0">{{ total_pending }}</p>
+                </div>
+                <div class="mt-2">
+                    <a href="{% url 'admin_pending_payments' %}" class="btn btn-light btn-sm text-danger fw-bold rounded-pill px-3 shadow-xs">
+                        <i class="bi bi-eye-fill me-1"></i> View List
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -227,70 +242,7 @@
               </div>
           </div>
 
-          <!-- Table 2: Not Uploaded / Pending -->
-          <div class="card shadow-sm border-0 mb-4">
-              <div class="card-header bg-white py-3">
-                  <h6 class="mb-0 fw-bold text-danger"><i class="bi bi-exclamation-circle-fill me-2"></i>Not Uploaded / Pending (സ്ക്രീൻഷോട്ട് ഇല്ലാത്തവർ / അപൂർണ്ണമായവർ)</h6>
-              </div>
-              <div class="card-body p-0">
-                  <div class="table-responsive">
-                      <table class="table table-hover align-middle mb-0">
-                          <thead class="table-light">
-                              <tr>
-                                  <th class="px-3" style="width: 40px;"><input type="checkbox" id="selectAllPending" class="form-check-input"></th>
-                                  <th>App No.</th>
-                                  <th>Name</th>
-                                  <th>Mobile</th>
-                                  <th>Mentor</th>
-                                  <th>Paid</th>
-                                  <th>Transaction</th>
-                                  <th class="text-end">Action</th>
-                              </tr>
-                          </thead>
-                          <tbody>
-                              {% for reg in registrations %}
-                                  {% if not reg.screenshot and not reg.is_paid %}
-                                  <tr class="searchable-row" data-search="{{ reg.name|lower }} {{ reg.mobile|lower }} {{ reg.application_number|lower }} {{ reg.place|lower }} {{ reg.post|lower }} {{ reg.district|lower }}">
-                                      <td class="px-3">
-                                          <input type="checkbox" name="student_ids" value="{{ reg.id }}" class="form-check-input student-checkbox pending-checkbox">
-                                      </td>
-                                      <td><strong>{{ reg.application_number }}</strong></td>
-                                      <td>
-                                          <span class="search-name-text">{{ reg.name }}</span><br>
-                                          <small class="text-muted">{{ reg.district }}</small>
-                                      </td>
-                                      <td>{{ reg.mobile }}</td>
-                                      <td>
-                                          {% if reg.student_profile.mentor %}
-                                              <span class="badge bg-info text-dark">{{ reg.student_profile.mentor.user.first_name }}</span>
-                                          {% else %}
-                                              <span class="text-muted small">None</span>
-                                          {% endif %}
-                                      </td>
-                                      <td>
-                                          <span class="badge bg-danger">No Image</span>
-                                      </td>
-                                      <td>
-                                          -
-                                      </td>
-                                      <td class="text-end text-nowrap">
-                                          <button type="button" onclick="sendWhatsAppMessage('{{ reg.mobile }}', '{{ reg.name|escapejs }}', '{{ reg.application_number }}', '{{ reg.is_paid }}')" class="btn btn-outline-success btn-sm rounded-circle py-0 px-1 me-1" title="Send WhatsApp Message" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-color: #25D366; color: #25D366;">
-                                              <i class="bi bi-whatsapp" style="font-size: 0.85rem;"></i>
-                                          </button>
-                                          <a href="{% url 'admin_print_registration' reg.id %}" target="_blank" class="btn btn-outline-success btn-sm rounded-circle py-0 px-1 me-1" title="Print Applicant Slip" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
-                                              <i class="bi bi-printer" style="font-size: 0.85rem;"></i>
-                                          </a>
-                                          <button type="button" class="btn btn-outline-primary btn-sm rounded-circle py-0 px-1 me-1" data-bs-toggle="modal" data-bs-target="#editRegModal{{ reg.id }}" title="Edit Applicant" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;"><i class="bi bi-pencil" style="font-size: 0.85rem;"></i></button>
-                                          <button type="button" onclick="submitSingleDelete('{{ reg.id }}')" class="btn btn-outline-danger btn-sm rounded-circle py-0 px-1" title="Delete Applicant" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;"><i class="bi bi-trash" style="font-size: 0.85rem;"></i></button>
-                                      </td>
-                                  </tr>
-                                  {% endif %}
-                              {% endfor %}
-                          </tbody>
-                      </table>
-                  </div>
-              </div>
-          </div>
+          
       </form>
   </div>
 
@@ -608,10 +560,7 @@
                       `യൂസർ നെയിം: ${mobile}\n` +
                       `പാസ്‌വേഡ്: APP-${appNo}\n\n` +
                       `ഫീസ് വിവരങ്ങൾ:\n` +
-                      `• പ്രവേശന ഫീസ്: ₹100\n` +
-                      `• കിത്താബ്: ₹150\n` +
-                      `• ഗൈഡ് ബുക്ക്: ₹100\n` +
-                      `• ആകെ തുക: ₹350 (കിത്താബ് തപാൽ വഴി ആവശ്യമുള്ളവർ തപാൽ ചാർജ് ₹50 ഉൾപ്പെടെ ₹400 അടക്കേണ്ടതാണ്)\n\n` +
+                      `• ആകെ തുക: ₹400\n\n` +
                       `ദയവായി എത്രയും വേഗം പേയ്‌മെന്റ് പൂർത്തിയാക്കി അതിന്റെ സ്ക്രീൻഷോട്ട് ഇതേ നമ്പറിലേക്ക് അയക്കുക.\n\n` +
                       `Your registration is received, but payment is pending. Please complete the payment and send the screenshot.\n` +
                       `Username: ${mobile}\n` +
@@ -637,15 +586,7 @@
         });
     }
 
-    // Select all checkbox logic for Pending table
-    const selectAllPending = document.getElementById('selectAllPending');
-    if (selectAllPending) {
-        selectAllPending.addEventListener('change', function(e) {
-            document.querySelectorAll('.pending-checkbox').forEach(cb => {
-                cb.checked = e.target.checked;
-            });
-        });
-    }
+    
 
     // Client-side live search logic
     const searchInput = document.getElementById('dashboardSearch');

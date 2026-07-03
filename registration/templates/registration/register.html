@@ -153,11 +153,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function togglePaymentFields() {
         if (isPaidSelect.value === 'True') {
             paymentFields.style.display = 'block';
-            if (qrCodeContainer) qrCodeContainer.style.display = 'block';
             screenshotInput.required = true;
         } else {
             paymentFields.style.display = 'none';
-            if (qrCodeContainer) qrCodeContainer.style.display = 'none';
             screenshotInput.required = false;
         }
     }

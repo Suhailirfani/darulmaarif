@@ -1,0 +1,166 @@
+{% extends 'registration/base.html' %}
+{% load static %}
+
+{% block title %}Update Registration - Online Dars{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden mb-5">
+            {% if not reg %}
+            <!-- LOOKUP MODE -->
+            <div class="card-header text-center py-4 text-white" style="background: linear-gradient(135deg, #4d0b5a, #b10f54);">
+                <h3 class="mb-1 fw-bold">രജിസ്ട്രേഷൻ കണ്ടെത്തുക</h3>
+                <p class="mb-0 text-white-50 small" style="font-size: 0.9rem;">Find & Update Your Registration Details</p>
+            </div>
+            
+            <div class="card-body p-4 p-md-5">
+                <div class="alert alert-info rounded-4 border-0 p-3 mb-4 text-start shadow-sm" style="font-family: 'Anek Malayalam', sans-serif; background-color: #f0f9ff; border-left: 5px solid #0284c7 !important;">
+                    <h6 class="fw-bold mb-2" style="color: #0369a1;"><i class="bi bi-info-circle-fill me-1"></i> വിവരങ്ങൾ അപ്ഡേറ്റ് ചെയ്യാം (Update Info)</h6>
+                    <p class="mb-0 text-muted small" style="line-height: 1.6;">
+                        നിങ്ങൾ നൽകിയ വിവരങ്ങളിൽ തെറ്റുകളുണ്ടെങ്കിലോ പിൻകോഡ് (PIN Code) ചേർക്കാൻ വിട്ടുപോയിട്ടുണ്ടെങ്കിലോ താഴെ നിങ്ങളുടെ ഫോൺ നമ്പറും വാട്സാപ്പ് നമ്പറോ/അപേക്ഷാ നമ്പറോ നൽകി തിരുത്താവുന്നതാണ്.
+                        <br><br>
+                        <em>If you missed adding your PIN code or need to correct your address, enter your registered Mobile number and either your WhatsApp or Application number below to find and edit your form.</em>
+                    </p>
+                </div>
+
+                <form method="POST" action="{% url 'edit_my_registration' %}" class="text-start">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="mobile" class="form-label fw-bold text-muted small">രജിസ്റ്റർ ചെയ്ത മൊബൈൽ നമ്പർ (Registered Mobile) <span class="text-danger">*</span></label>
+                        <input type="text" id="mobile" name="mobile" class="form-control rounded-pill px-3 py-2 border-2" placeholder="e.g. 9876543210" required>
+                    </div>
+
+                    <div class="card bg-light border-0 rounded-4 p-3 mb-4">
+                        <p class="fw-bold text-dark small mb-3 text-center"><i class="bi bi-shield-lock-fill text-brand me-1"></i> സുരക്ഷാ പരിശോധന (Verification - Provide any one below)</p>
+                        
+                        <div class="mb-3">
+                            <label for="whatsapp" class="form-label fw-bold text-muted small">വാട്സാപ്പ് നമ്പർ (WhatsApp Number)</label>
+                            <input type="text" id="whatsapp" name="whatsapp" class="form-control rounded-pill px-3 py-2" placeholder="e.g. 9876543210">
+                        </div>
+                        
+                        <div class="text-center my-2 text-muted fw-bold small">— OR —</div>
+                        
+                        <div class="mb-2">
+                            <label for="app_num" class="form-label fw-bold text-muted small">അപേക്ഷാ നമ്പർ (Application Number)</label>
+                            <input type="text" id="app_num" name="app_num" class="form-control rounded-pill px-3 py-2" placeholder="e.g. APP-042 or 42">
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold text-white shadow" style="background: linear-gradient(135deg, #4d0b5a, #b10f54); border: none;">
+                            രജിസ്ട്രേഷൻ കണ്ടെത്തുക (Find My Registration)
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Recovery Help -->
+                <div class="text-center mt-4 pt-3 border-top">
+                    <p class="text-muted small mb-2">അപേക്ഷാ നമ്പർ മറന്നുപോയോ? താഴെയുള്ള ബട്ടണിൽ ക്ലിക്ക് ചെയ്ത് വാട്സാപ്പ് വഴി അഡ്മിനുമായി ബന്ധപ്പെടുക:</p>
+                    <a href="https://wa.me/919544241067?text=ഹലോ, ഞാൻ ഓൺലൈൻ ദർസിൽ രജിസ്റ്റർ ചെയ്തിരുന്നു. എന്റെ അപേക്ഷാ നമ്പർ കണ്ടെത്താൻ സഹായിക്കാമോ." id="whatsappHelpBtn" target="_blank" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                        <i class="bi bi-whatsapp me-1"></i> അഡ്മിൻ സഹായം ലഭ്യമാക്കുക (WhatsApp Support)
+                    </a>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- EDIT MODE -->
+            <div class="card-header text-center py-4 text-white" style="background: linear-gradient(135deg, #4d0b5a, #b10f54);">
+                <h3 class="mb-1 fw-bold">വിവരങ്ങൾ തിരുത്തുക</h3>
+                <p class="mb-0 text-white-50 small" style="font-size: 0.9rem;">Application Number: APP-{{ reg.application_number }}</p>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <form method="POST" action="{% url 'edit_my_registration' %}" class="text-start">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">Name (പേര്)</label>
+                        <input type="text" name="name" class="form-control rounded-3" value="{{ reg.name }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">Mobile (മൊബൈൽ നമ്പർ - മാറ്റാൻ കഴിയില്ല)</label>
+                        <input type="text" class="form-control rounded-3 bg-light" value="{{ reg.mobile }}" readonly disabled>
+                        <div class="form-text text-muted small">മൊബൈൽ നമ്പർ മാറ്റണമെങ്കിൽ അഡ്മിനെ ബന്ധപ്പെടുക. (Contact admin to change mobile number.)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">House Name (വീട്ടുപേര്)</label>
+                        <input type="text" name="house_name" class="form-control rounded-3" value="{{ reg.house_name }}" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted small">Place (സ്ഥലം)</label>
+                            <input type="text" name="place" class="form-control rounded-3" value="{{ reg.place }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted small">Post (പോസ്റ്റ്)</label>
+                            <input type="text" name="post" class="form-control rounded-3" value="{{ reg.post }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted small">PIN Code (പിൻകോഡ്) <span class="text-danger">*</span></label>
+                            <input type="text" name="pin_code" class="form-control rounded-3 border-2 border-primary-subtle" value="{{ reg.pin_code }}" placeholder="e.g. 673632" required>
+                            <div class="form-text text-muted small">പുസ്തകം അയക്കാൻ പിൻകോഡ് നിർബന്ധമാണ്. (PIN code is mandatory for dispatch.)</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-muted small">District (ജില്ല)</label>
+                            <input type="text" name="district" class="form-control rounded-3" value="{{ reg.district }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small">WhatsApp (വാട്സാപ്പ് നമ്പർ)</label>
+                        <input type="text" name="whatsapp" class="form-control rounded-3" value="{{ reg.whatsapp }}" required>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold text-white shadow" style="background: linear-gradient(135deg, #4d0b5a, #b10f54); border: none;">
+                            വിവരങ്ങൾ അപ്ഡേറ്റ് ചെയ്യുക (Save Changes)
+                        </button>
+                        <a href="{% url 'edit_my_registration' %}?action=clear" class="btn btn-light rounded-pill btn-sm text-muted mt-1">റദ്ദാക്കുക (Cancel & Clear Session)</a>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add bootstrap form controls style dynamically
+    const inputs = document.querySelectorAll('input:not([type="checkbox"]), select');
+    inputs.forEach(input => {
+        if (!input.classList.contains('form-control')) {
+            input.classList.add('form-control');
+        }
+    });
+
+    // Dynamically append mobile number to whatsapp prefilled message
+    const mobileInput = document.getElementById('mobile');
+    const whatsappHelpBtn = document.getElementById('whatsappHelpBtn');
+    
+    if (mobileInput && whatsappHelpBtn) {
+        const baseHref = "https://wa.me/919544241067?text=";
+        const defaultText = "ഹലോ, ഞാൻ ഓൺലൈൻ ദർസിൽ രജിസ്റ്റർ ചെയ്തിരുന്നു. എന്റെ അപേക്ഷാ നമ്പർ കണ്ടെത്താൻ സഹായിക്കാമോ.";
+        
+        mobileInput.addEventListener('input', function() {
+            const mobileVal = this.value.trim();
+            let text = defaultText;
+            if (mobileVal) {
+                text += ` (എന്റെ മൊബൈൽ നമ്പർ: ${mobileVal})`;
+            }
+            whatsappHelpBtn.setAttribute('href', baseHref + encodeURIComponent(text));
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -89,6 +89,9 @@
                         </li>
                     {% else %}
                         <li class="nav-item">
+                            <a class="nav-link" href="{% url 'edit_my_registration' %}">Edit Registration</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'login' %}?next={% url 'dashboard' %}">Login</a>
                         </li>
                     {% endif %}

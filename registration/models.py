@@ -8,6 +8,7 @@ class Registration(models.Model):
     house_name = models.CharField(max_length=255)
     place = models.CharField(max_length=255)
     post = models.CharField(max_length=255)
+    pin_code = models.CharField(max_length=15, blank=True, default="")
     district = models.CharField(max_length=255)
     mobile = models.CharField(max_length=20)
     whatsapp = models.CharField(max_length=20)

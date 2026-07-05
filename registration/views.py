@@ -41,6 +41,7 @@ def register_view(request):
                     'house_name': form.cleaned_data.get('house_name'),
                     'place': form.cleaned_data.get('place'),
                     'post': form.cleaned_data.get('post'),
+                    'pin_code': form.cleaned_data.get('pin_code'),
                     'district': form.cleaned_data.get('district'),
                     'mobile': form.cleaned_data.get('mobile'),
                     'whatsapp': form.cleaned_data.get('whatsapp'),
@@ -73,6 +74,7 @@ def complete_payment_view(request):
                 house_name=temp_data['house_name'],
                 place=temp_data['place'],
                 post=temp_data['post'],
+                pin_code=temp_data.get('pin_code', ''),
                 district=temp_data['district'],
                 mobile=temp_data['mobile'],
                 whatsapp=temp_data['whatsapp'],
@@ -318,6 +320,7 @@ def admin_edit_registration_view(request):
         reg.house_name = request.POST.get('house_name', reg.house_name)
         reg.place = request.POST.get('place', reg.place)
         reg.post = request.POST.get('post', reg.post)
+        reg.pin_code = request.POST.get('pin_code', reg.pin_code)
         reg.district = request.POST.get('district', reg.district)
         reg.mobile = new_mobile
         reg.whatsapp = request.POST.get('whatsapp', reg.whatsapp)
@@ -352,7 +355,7 @@ def export_excel_view(request):
     worksheet.title = 'Registrations'
     
     columns = [
-        'ID', 'Name', 'House Name', 'Place', 'Post', 'District',
+        'ID', 'Name', 'House Name', 'Place', 'Post', 'PIN Code', 'District',
         'Mobile', 'WhatsApp', 'Paid', 'Transaction Time', 'Transaction ID', 'Created At'
     ]
     row_num = 1
@@ -364,7 +367,7 @@ def export_excel_view(request):
     for reg in Registration.objects.all().order_by('-created_at'):
         row_num += 1
         row = [
-            f"APP-{reg.application_number}", reg.name, reg.house_name, reg.place, reg.post, reg.district,
+            f"APP-{reg.application_number}", reg.name, reg.house_name, reg.place, reg.post, reg.pin_code, reg.district,
             reg.mobile, reg.whatsapp, 'Yes' if reg.is_paid else 'No',
             reg.transaction_time_and_date.strftime('%Y-%m-%d %H:%M:%S') if reg.transaction_time_and_date else '',
             reg.transaction_id,
@@ -454,3 +457,87 @@ def mentor_dashboard_view(request):
         pass
         
     return render(request, 'registration/mentor_dashboard.html', {'student_data': student_data})
+
+
+def edit_my_registration_view(request):
+    action = request.GET.get('action')
+    if action == 'clear':
+        if 'editable_reg_id' in request.session:
+            del request.session['editable_reg_id']
+        return redirect('edit_my_registration')
+
+    editable_reg_id = request.session.get('editable_reg_id')
+    reg = None
+    if editable_reg_id:
+        reg = get_object_or_404(Registration, id=editable_reg_id)
+
+    if request.method == 'POST':
+        # If user is in lookup mode
+        if not reg:
+            mobile = request.POST.get('mobile', '').strip()
+            whatsapp = request.POST.get('whatsapp', '').strip()
+            app_num_str = request.POST.get('app_num', '').strip()
+
+            if not mobile:
+                messages.error(request, "മൊബൈൽ നമ്പർ നൽകേണ്ടതുണ്ട്. (Mobile number is required.)")
+                return render(request, 'registration/edit_my_registration.html', {'reg': None})
+
+            # Find applicant matching mobile
+            try:
+                candidate = Registration.objects.get(mobile=mobile)
+                # Verify match
+                is_match = False
+                
+                # Check WhatsApp match if provided
+                if whatsapp and candidate.whatsapp == whatsapp:
+                    is_match = True
+                # Check Application Number match if provided
+                elif app_num_str:
+                    # Clean up string app number, remove 'APP-' if entered
+                    clean_app_num = app_num_str.upper().replace('APP-', '').strip()
+                    try:
+                        app_num_int = int(clean_app_num)
+                        if candidate.application_num == app_num_int:
+                            is_match = True
+                    except ValueError:
+                        pass
+                
+                if is_match:
+                    request.session['editable_reg_id'] = candidate.id
+                    messages.success(request, f"രജിസ്ട്രേഷൻ കണ്ടെത്തി: {candidate.name}. നിങ്ങൾക്ക് ഇപ്പോൾ വിവരങ്ങൾ തിരുത്താം. (Registration found: {candidate.name}. You can edit your details now.)")
+                    return redirect('edit_my_registration')
+                else:
+                    messages.error(request, "നൽകിയ വിവരങ്ങൾ പൊരുത്തപ്പെടുന്നില്ല. ദയവായി ശരിയായ വിവരങ്ങൾ നൽകുക. (The details provided do not match. Please enter correct details.)")
+            except Registration.DoesNotExist:
+                messages.error(request, "ഈ മൊബൈൽ നമ്പറിൽ രജിസ്ട്രേഷൻ ഒന്നും കണ്ടെത്തിയില്ല. (No registration found for this mobile number.)")
+            
+            return render(request, 'registration/edit_my_registration.html', {'reg': None})
+            
+        else:
+            # User is submitting edits
+            name = request.POST.get('name', '').strip()
+            house_name = request.POST.get('house_name', '').strip()
+            place = request.POST.get('place', '').strip()
+            post = request.POST.get('post', '').strip()
+            pin_code = request.POST.get('pin_code', '').strip()
+            district = request.POST.get('district', '').strip()
+            whatsapp = request.POST.get('whatsapp', '').strip()
+
+            if not (name and house_name and place and post and pin_code and district and whatsapp):
+                messages.error(request, "ദയവായി എല്ലാ വിവരങ്ങളും പൂരിപ്പിക്കുക. പിൻകോഡ് നിർബന്ധമാണ്. (Please fill in all details. PIN Code is compulsory.)")
+                return render(request, 'registration/edit_my_registration.html', {'reg': reg})
+
+            reg.name = name
+            reg.house_name = house_name
+            reg.place = place
+            reg.post = post
+            reg.pin_code = pin_code
+            reg.district = district
+            reg.whatsapp = whatsapp
+            reg.save()
+
+            messages.success(request, "നിങ്ങളുടെ വിവരങ്ങൾ വിജയകരമായി അപ്ഡേറ്റ് ചെയ്തിരിക്കുന്നു! (Your details have been successfully updated!)")
+            del request.session['editable_reg_id']
+            return redirect('register_success', pk=reg.pk)
+
+    return render(request, 'registration/edit_my_registration.html', {'reg': reg})

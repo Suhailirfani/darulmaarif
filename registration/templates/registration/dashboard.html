@@ -510,13 +510,19 @@
                               <input type="text" name="post" class="form-control bg-light" value="{{ reg.post }}" required>
                           </div>
                           <div class="col-md-6 mb-3">
+                              <label class="form-label text-muted small fw-bold">PIN Code</label>
+                              <input type="text" name="pin_code" class="form-control bg-light" value="{{ reg.pin_code }}" required>
+                          </div>
+                      </div>
+                      <div class="row">
+                          <div class="col-md-6 mb-3">
                               <label class="form-label text-muted small fw-bold">District</label>
                               <input type="text" name="district" class="form-control bg-light" value="{{ reg.district }}" required>
                           </div>
-                      </div>
-                      <div class="mb-4">
-                          <label class="form-label text-muted small fw-bold">WhatsApp</label>
-                          <input type="text" name="whatsapp" class="form-control bg-light" value="{{ reg.whatsapp }}" required>
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label text-muted small fw-bold">WhatsApp</label>
+                              <input type="text" name="whatsapp" class="form-control bg-light" value="{{ reg.whatsapp }}" required>
+                          </div>
                       </div>
                       <div class="d-grid">
                           <button type="submit" class="btn btn-primary rounded-pill fw-bold">Save Changes</button>

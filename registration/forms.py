@@ -2,10 +2,12 @@ from django import forms
 from .models import Registration
 
 class RegistrationForm(forms.ModelForm):
+    pin_code = forms.CharField(required=True, label="PIN Code")
+
     class Meta:
         model = Registration
         fields = [
-            'name', 'house_name', 'place', 'post', 'district',
+            'name', 'house_name', 'place', 'post', 'pin_code', 'district',
             'mobile', 'whatsapp', 'is_paid', 'transaction_time_and_date',
             'transaction_id', 'screenshot'
         ]

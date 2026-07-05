@@ -45,6 +45,14 @@
                 
                 <p class="lead text-muted mb-4">Thank you for registering for the Online Dars.</p>
                 
+                <div class="alert alert-secondary rounded-4 p-3 mb-4 text-start border-0 shadow-xs" style="background-color: #f3f4f6;">
+                    <p class="mb-0 text-muted small" style="line-height: 1.5;">
+                        <i class="bi bi-pencil-square me-1"></i> സമർപ്പിച്ച വിവരങ്ങളിൽ തെറ്റുകളുണ്ടോ? ഇവിടെ ക്ലിക്ക് ചെയ്ത് തിരുത്താവുന്നതാണ്:
+                        <br>
+                        <a href="{% url 'edit_my_registration' %}" class="fw-bold text-decoration-none mt-1 d-inline-block" style="color: #4d0b5a;"><i class="bi bi-arrow-right-short"></i> Edit / Update Submitted Details</a>
+                    </p>
+                </div>
+                
                 {% if reg.is_paid %}
                 <div class="mb-4 p-3 bg-light rounded-4 border">
                     <p class="text-dark fw-bold mb-2">Important Next Step:</p>

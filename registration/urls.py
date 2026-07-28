@@ -21,4 +21,5 @@ urlpatterns = [
     path('dashboard/mentor/', views.mentor_dashboard_view, name='mentor_dashboard'),
     path('classroom/<int:class_id>/', views.classroom_view, name='classroom'),
     path('export/excel/', views.export_excel_view, name='export_excel'),
+    path('sw.js', views.service_worker_view, name='service_worker'),
 ]

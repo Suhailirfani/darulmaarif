@@ -1,3 +1,4 @@
+import os
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -22,6 +23,15 @@ class Registration(models.Model):
     @property
     def application_number(self):
         return f"{self.application_num:03d}" if self.application_num else ""
+
+    @property
+    def screenshot_exists(self):
+        if self.screenshot and hasattr(self.screenshot, 'path'):
+            try:
+                return os.path.isfile(self.screenshot.path)
+            except Exception:
+                return False
+        return False
 
     def save(self, *args, **kwargs):
         if not self.application_num:
@@ -74,19 +84,39 @@ class StudentProgress(models.Model):
     def __str__(self):
         return f"{self.student.username} - {self.course_class.title} - {'Completed' if self.is_completed else 'Pending'}"
 
-# Signal to auto-create User when Registration is_paid becomes True
+# Signal to auto-create User when Registration is_paid becomes True or sync details
 @receiver(post_save, sender=Registration)
 def create_student_user(sender, instance, created, **kwargs):
     if instance.is_paid:
-        # Check if user already exists
-        if not User.objects.filter(username=instance.mobile).exists():
-            # Create User
+        # Check if student profile already exists for this registration
+        profile = UserProfile.objects.filter(registration=instance).first()
+        if profile:
+            # Profile exists, sync user details if updated
+            user = profile.user
+            updated = False
+            if user.first_name != instance.name:
+                user.first_name = instance.name
+                updated = True
+            if user.username != instance.mobile:
+                # Only update username if target mobile isn't taken by another user
+                if not User.objects.filter(username=instance.mobile).exclude(pk=user.pk).exists():
+                    user.username = instance.mobile
+                    updated = True
+            if updated:
+                user.save()
+            return
+
+        # If no profile exists yet, check if User with username=instance.mobile exists
+        user = User.objects.filter(username=instance.mobile).first()
+        if not user:
             user = User.objects.create_user(
                 username=instance.mobile,
                 password=f"APP-{instance.application_number}",
                 first_name=instance.name
             )
-            # Create UserProfile
+        
+        # Link user and profile if not linked
+        if not hasattr(user, 'profile'):
             UserProfile.objects.create(
                 user=user,
                 role='STUDENT',

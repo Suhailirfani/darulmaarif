@@ -68,7 +68,7 @@
                         </thead>
                         <tbody>
                             {% for reg in registrations %}
-                                <tr class="searchable-row" data-search="{{ reg.name|lower }} {{ reg.mobile|lower }} {{ reg.application_number|lower }} {{ reg.place|lower }} {{ reg.post|lower }} {{ reg.district|lower }}">
+                                <tr class="searchable-row" data-search="{{ reg.name|lower }} {{ reg.mobile|lower }} {{ reg.whatsapp|lower }} {{ reg.application_number|lower }} {{ reg.place|lower }} {{ reg.post|lower }} {{ reg.district|lower }}">
                                     <td class="px-3">
                                         <input type="checkbox" name="student_ids" value="{{ reg.id }}" class="form-check-input student-checkbox pending-checkbox">
                                     </td>
@@ -77,7 +77,12 @@
                                         <span class="search-name-text fw-bold text-dark">{{ reg.name }}</span><br>
                                         <small class="text-muted">{{ reg.district }} - {{ reg.place }}</small>
                                     </td>
-                                    <td>{{ reg.mobile }}</td>
+                                    <td>
+                                        {{ reg.mobile }}
+                                        {% if reg.whatsapp and reg.whatsapp != reg.mobile %}
+                                            <br><small class="text-muted" title="WhatsApp Number"><i class="bi bi-whatsapp text-success me-1"></i>{{ reg.whatsapp }}</small>
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         {% if reg.student_profile.mentor %}
                                             <span class="badge bg-info text-dark">{{ reg.student_profile.mentor.user.first_name }}</span>

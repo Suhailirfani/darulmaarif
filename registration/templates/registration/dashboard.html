@@ -192,7 +192,7 @@
                           <tbody>
                               {% for reg in registrations %}
                                   {% if reg.screenshot or reg.is_paid %}
-                                  <tr class="searchable-row" data-search="{{ reg.name|lower }} {{ reg.mobile|lower }} {{ reg.application_number|lower }} {{ reg.place|lower }} {{ reg.post|lower }} {{ reg.district|lower }}">
+                                  <tr class="searchable-row" data-search="{{ reg.name|lower }} {{ reg.mobile|lower }} {{ reg.whatsapp|lower }} {{ reg.application_number|lower }} {{ reg.place|lower }} {{ reg.post|lower }} {{ reg.district|lower }}">
                                       <td class="px-3">
                                           <input type="checkbox" name="student_ids" value="{{ reg.id }}" class="form-check-input student-checkbox paid-checkbox">
                                       </td>
@@ -201,7 +201,12 @@
                                           <span class="search-name-text">{{ reg.name }}</span><br>
                                           <small class="text-muted">{{ reg.district }}</small>
                                       </td>
-                                      <td>{{ reg.mobile }}</td>
+                                      <td>
+                                          {{ reg.mobile }}
+                                          {% if reg.whatsapp and reg.whatsapp != reg.mobile %}
+                                              <br><small class="text-muted" title="WhatsApp Number"><i class="bi bi-whatsapp text-success me-1"></i>{{ reg.whatsapp }}</small>
+                                          {% endif %}
+                                      </td>
                                       <td>
                                           {% if reg.student_profile.mentor %}
                                               <span class="badge bg-info text-dark">{{ reg.student_profile.mentor.user.first_name }}</span>
@@ -460,7 +465,10 @@
               </div>
               <div class="modal-body text-center pt-0">
                   <p class="small text-muted mb-3">Review the screenshot and approve. The image will be deleted automatically to save storage.</p>
-                  <img src="{{ reg.screenshot.url }}" class="img-fluid rounded-3 mb-4 shadow-sm" alt="Payment Screenshot" style="max-height: 400px; object-fit: contain;">
+                  <img src="{{ reg.screenshot.url }}" class="img-fluid rounded-3 mb-4 shadow-sm" alt="Payment Screenshot" style="max-height: 400px; object-fit: contain;" onerror="this.onerror=null; this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='block';">
+                  <div class="alert alert-warning text-center small mb-4 rounded-3" style="display: none;">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i> Image file missing on server disk (uploaded on live server).
+                  </div>
                   <form method="POST" action="{% url 'admin_verify_payment' %}">
                       {% csrf_token %}
                       <input type="hidden" name="reg_id" value="{{ reg.id }}">

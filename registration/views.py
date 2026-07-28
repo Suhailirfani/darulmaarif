@@ -300,6 +300,9 @@ def admin_verify_payment_view(request):
                 
     return redirect_to_referer_or_dashboard(request)
 
+def service_worker_view(request):
+    return HttpResponse("// Service worker placeholder", content_type='application/javascript')
+
 @login_required
 def admin_edit_registration_view(request):
     if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
@@ -312,29 +315,21 @@ def admin_edit_registration_view(request):
         old_mobile = reg.mobile
         new_mobile = request.POST.get('mobile', reg.mobile).strip()
         
-        if old_mobile != new_mobile and Registration.objects.filter(mobile=new_mobile).exists():
+        if old_mobile != new_mobile and Registration.objects.filter(mobile=new_mobile).exclude(id=reg.id).exists():
             messages.error(request, f"കഴിയുന്നില്ല: {new_mobile} എന്ന ഫോൺ നമ്പർ ഇതിനകം മറ്റൊരു അപേക്ഷകൻ രജിസ്റ്റർ ചെയ്തിട്ടുണ്ട്. (Cannot update: The mobile number {new_mobile} is already registered by another applicant.)")
             return redirect_to_referer_or_dashboard(request)
             
-        reg.name = request.POST.get('name', reg.name)
-        reg.house_name = request.POST.get('house_name', reg.house_name)
-        reg.place = request.POST.get('place', reg.place)
-        reg.post = request.POST.get('post', reg.post)
-        reg.pin_code = request.POST.get('pin_code', reg.pin_code)
-        reg.district = request.POST.get('district', reg.district)
+        reg.name = request.POST.get('name', reg.name).strip()
+        reg.house_name = request.POST.get('house_name', reg.house_name).strip()
+        reg.place = request.POST.get('place', reg.place).strip()
+        reg.post = request.POST.get('post', reg.post).strip()
+        reg.pin_code = request.POST.get('pin_code', reg.pin_code).strip()
+        reg.district = request.POST.get('district', reg.district).strip()
         reg.mobile = new_mobile
-        reg.whatsapp = request.POST.get('whatsapp', reg.whatsapp)
+        reg.whatsapp = request.POST.get('whatsapp', reg.whatsapp).strip()
         
         reg.save()
-        
-        # If mobile changed and they are already a user, update their login username
-        if old_mobile != reg.mobile and reg.is_paid:
-            try:
-                user = User.objects.get(username=old_mobile)
-                user.username = reg.mobile
-                user.save()
-            except User.DoesNotExist:
-                pass
+        messages.success(request, f"അപേക്ഷകന്റെ വിവരങ്ങൾ വിജയകരമായി പുതുക്കി. (Details of {reg.name} updated successfully.)")
                 
     return redirect_to_referer_or_dashboard(request)
 

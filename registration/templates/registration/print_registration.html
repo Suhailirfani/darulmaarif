@@ -176,7 +176,10 @@
                     <div class="detail-row flex-column align-items-start">
                         <div class="detail-label w-100 mb-2">Screenshot (സ്ക്രീൻഷോട്ട്)</div>
                         <div class="detail-value w-100">
-                            <img src="{{ reg.screenshot.url }}" alt="Screenshot Preview" class="screenshot-preview img-fluid">
+                            <img src="{{ reg.screenshot.url }}" alt="Screenshot Preview" class="screenshot-preview img-fluid" onerror="this.onerror=null; this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='block';">
+                            <div class="alert alert-warning text-center small my-2 py-1" style="display: none;">
+                                <i class="bi bi-exclamation-triangle me-1"></i> Screenshot image file unavailable.
+                            </div>
                         </div>
                     </div>
                 {% endif %}

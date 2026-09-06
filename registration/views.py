@@ -377,7 +377,8 @@ def export_excel_view(request):
 
 @login_required
 def student_dashboard_view(request):
-    if getattr(request.user, 'profile', None) and request.user.profile.role != 'STUDENT':
+    is_admin = request.user.is_superuser or (getattr(request.user, 'profile', None) and request.user.profile.role == 'ADMIN')
+    if not is_admin and getattr(request.user, 'profile', None) and request.user.profile.role != 'STUDENT':
         return redirect('landing')
         
     classes = CourseClass.objects.all().order_by('order')
@@ -392,22 +393,26 @@ def student_dashboard_view(request):
         completed = c.id in completed_class_ids
         class_data.append({
             'class': c,
-            'is_unlocked': is_unlocked,
+            'is_unlocked': True if is_admin else is_unlocked,
             'is_completed': completed
         })
         is_unlocked = completed
         
-    return render(request, 'registration/student_dashboard.html', {'class_data': class_data})
+    return render(request, 'registration/student_dashboard.html', {
+        'class_data': class_data,
+        'is_admin_preview': is_admin
+    })
 
 @login_required
 def classroom_view(request, class_id):
-    if getattr(request.user, 'profile', None) and request.user.profile.role != 'STUDENT':
+    is_admin = request.user.is_superuser or (getattr(request.user, 'profile', None) and request.user.profile.role == 'ADMIN')
+    if not is_admin and getattr(request.user, 'profile', None) and request.user.profile.role != 'STUDENT':
         return redirect('landing')
         
     course_class = get_object_or_404(CourseClass, id=class_id)
     
-    # Check if unlocked
-    if course_class.order > 1:
+    # Check if unlocked (only enforce for standard students)
+    if not is_admin and course_class.order > 1:
         prev_class = CourseClass.objects.filter(order=course_class.order - 1).first()
         if prev_class:
             prev_progress = StudentProgress.objects.filter(student=request.user, course_class=prev_class, is_completed=True).exists()
@@ -422,7 +427,11 @@ def classroom_view(request, class_id):
         progress.save()
         return redirect('student_dashboard')
         
-    return render(request, 'registration/classroom.html', {'course_class': course_class, 'is_already_completed': is_already_completed})
+    return render(request, 'registration/classroom.html', {
+        'course_class': course_class, 
+        'is_already_completed': is_already_completed,
+        'is_admin_preview': is_admin
+    })
 
 @login_required
 def mentor_dashboard_view(request):

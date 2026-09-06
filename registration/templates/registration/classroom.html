@@ -5,9 +5,23 @@
 
 {% block content %}
 <div class="container mt-4 mb-5">
+    {% if is_admin_preview %}
+    <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-center p-3 gap-2">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-eye-fill fs-4 text-warning-emphasis me-3"></i>
+            <div>
+                <strong class="text-dark">Admin Preview Mode:</strong> 
+                <span class="text-muted small d-block d-sm-inline">Previewing Classroom Player for Class {{ course_class.order }}.</span>
+            </div>
+        </div>
+        <a href="{% url 'student_dashboard' %}" class="btn btn-dark btn-sm rounded-pill px-3 shadow-xs text-nowrap">
+            <i class="bi bi-arrow-left me-1"></i> Back to Student Dashboard
+        </a>
+    </div>
+    {% endif %}
     <div class="row justify-content-center">
         <div class="col-lg-8 text-center">
-            <h3 class="mb-4 fw-bold" style="color: #4d0b5a;">Class {{ course_class.order }}: {{ course_class.title }}</h3>
+            <h3 class="mb-4 fw-bold" style="color: #4d0b5a;">ക്ലാസ് {{ course_class.order }}: {{ course_class.title }}</h3>
             
             <div class="ratio ratio-16x9 mb-4 shadow-lg rounded-4 overflow-hidden" style="border: 4px solid #fff;">
                 <iframe src="https://www.youtube-nocookie.com/embed/{{ course_class.youtube_video_id }}?rel=0&modestbranding=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
@@ -23,24 +37,26 @@
             
             <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-5">
                 <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
-                    <i class="bi bi-arrow-left me-2"></i> Dashboard
+                    <i class="bi bi-arrow-left me-2"></i> Dashboard (ഡാഷ്‌ബോർഡ്)
                 </a>
                 
                 {% if is_already_completed %}
                 <button type="button" class="btn btn-success btn-lg px-5 rounded-pill fw-bold shadow-sm d-flex align-items-center" disabled>
-                    <i class="bi bi-check2-all fs-4 me-2"></i> Class Completed
+                    <i class="bi bi-check2-all fs-4 me-2"></i> പൂർത്തിയായി (Class Completed)
                 </button>
                 {% else %}
                 <form method="POST" class="m-0">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill fw-bold shadow-sm d-flex align-items-center">
-                        <i class="bi bi-check2-circle fs-4 me-2"></i> Mark as Completed
+                        <i class="bi bi-check2-circle fs-4 me-2"></i> Mark as Completed (പൂർത്തിയായി)
                     </button>
                 </form>
                 {% endif %}
             </div>
             
-            <p class="text-muted small mt-3">Clicking 'Mark as Completed' will unlock the next class for you.</p>
+            <p class="text-muted small mt-3">
+                <i class="bi bi-info-circle me-1"></i> വീഡിയോ കണ്ടു കഴിഞ്ഞ ശേഷം <strong>'Mark as Completed'</strong> ക്ലിക്ക് ചെയ്യുക. അപ്പോൾ അടുത്ത ക്ലാസ് ലഭ്യമാകുന്നതാണ്.
+            </p>
         </div>
     </div>
 </div>

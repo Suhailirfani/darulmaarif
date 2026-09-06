@@ -4,34 +4,226 @@
 {% block title %}Student Dashboard - Online Dars{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="text-center mb-5">
+<style>
+    .class-card {
+        border-radius: 18px;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        overflow: hidden;
+        border: none;
+        background: #ffffff;
+    }
+    .class-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.08) !important;
+    }
+    .thumb-wrapper {
+        position: relative;
+        overflow: hidden;
+        background-color: #111;
+    }
+    .thumb-img {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.35s ease;
+    }
+    .class-card:hover .thumb-img {
+        transform: scale(1.06);
+    }
+    .play-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.2);
+        transition: background 0.2s ease;
+        text-decoration: none;
+    }
+    .class-card:hover .play-overlay {
+        background: rgba(0, 0, 0, 0.05);
+    }
+    .play-btn-circle {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #4d0b5a;
+        font-size: 1.6rem;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+        transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+    .class-card:hover .play-btn-circle {
+        transform: scale(1.15);
+        background: linear-gradient(135deg, #4d0b5a, #b10f54);
+        color: #ffffff;
+    }
+    .locked-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 15, 15, 0.72);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        backdrop-filter: blur(2px);
+    }
+    .badge-glass {
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(4px);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        padding: 4px 10px;
+    }
+</style>
+
+<div class="container mt-4 mb-5">
+    {% if is_admin_preview %}
+    <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-center p-3 gap-2">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-eye-fill fs-4 text-warning-emphasis me-3"></i>
+            <div>
+                <strong class="text-dark">Admin Preview Mode:</strong> 
+                <span class="text-muted small d-block d-sm-inline">You are viewing how the Classroom Dashboard appears to students.</span>
+            </div>
+        </div>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-dark btn-sm rounded-pill px-3 shadow-xs text-nowrap">
+            <i class="bi bi-arrow-left me-1"></i> Return to Admin Panel
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="text-center mb-4">
         <h2 class="fw-bold" style="color: #4d0b5a;">My Classroom</h2>
-        <p class="text-muted">Welcome {{ request.user.first_name }}! Start learning below.</p>
+        <p class="text-muted mb-3">{% if is_admin_preview %}Student View Simulation{% else %}സ്വാഗതം {{ request.user.first_name }}! ദർസ് ക്ലാസുകൾ താഴെ ലഭ്യമാണ്.{% endif %}</p>
+        
+        <!-- Malayalam Instructions Card -->
+        <div class="card border-0 rounded-4 shadow-sm mx-auto text-start" style="max-width: 780px; background: #fff8fc; border-left: 5px solid #4d0b5a !important;">
+            <div class="card-body p-3 p-md-4 d-flex align-items-start">
+                <i class="bi bi-info-circle-fill fs-3 me-3" style="color: #4d0b5a;"></i>
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">നിർദ്ദേശങ്ങൾ (Instructions):</h6>
+                    <ul class="text-muted small mb-0 ps-3" style="line-height: 1.6;">
+                        <li>ക്ലാസ് കാണുന്നതിനായി ചിത്രത്തിലോ <strong>'Watch Now'</strong> ബട്ടണിലോ ക്ലിക്ക് ചെയ്യുക. (Click the thumbnail or 'Watch Now' to view the class.)</li>
+                        <li>വീഡിയോ പൂർണ്ണമായും കണ്ട ശേഷം <strong>'Mark as Completed'</strong> ബട്ടൺ അമർത്തുക. അപ്പോൾ മാത്രമേ അടുത്ത ക്ലാസ് ലഭ്യമാകൂ. (Marking as completed unlocks the next class.)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
     
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for item in class_data %}
             <div class="col">
-                <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden {% if not item.is_unlocked %}opacity-50 bg-light{% endif %}" style="transition: transform 0.2s;">
-                    <div class="card-body text-center d-flex flex-column justify-content-center p-4">
-                        <h1 class="display-4 fw-bold text-muted mb-3" style="opacity: 0.2;">{{ item.class.order }}</h1>
-                        <h5 class="card-title fw-bold mb-3" style="color: #1e3c72;">{{ item.class.title }}</h5>
-                        <p class="text-muted small mb-4 flex-grow-1">{{ item.class.description }}</p>
+                <div class="card h-100 shadow-sm class-card {% if not item.is_unlocked %}opacity-75{% endif %}">
+                    <!-- Video Thumbnail Preview (Clickable to Enter Class) -->
+                    {% if item.is_completed or item.is_unlocked %}
+                        <a href="{% url 'classroom' item.class.id %}" class="thumb-wrapper ratio ratio-16x9 d-block text-decoration-none" title="Watch Class {{ item.class.order }}: {{ item.class.title }}">
+                            {% if item.class.youtube_video_id %}
+                            <img src="https://img.youtube.com/vi/{{ item.class.youtube_video_id }}/hqdefault.jpg" 
+                                 class="thumb-img" 
+                                 alt="{{ item.class.title }}"
+                                 loading="lazy"
+                                 onerror="this.onerror=null; this.src='https://img.youtube.com/vi/{{ item.class.youtube_video_id }}/mqdefault.jpg';">
+                            {% else %}
+                            <div class="d-flex align-items-center justify-content-center h-100 text-muted bg-dark">
+                                <i class="bi bi-camera-video fs-1"></i>
+                            </div>
+                            {% endif %}
+
+                            <!-- Class Order Pill Top-Left -->
+                            <div class="position-absolute top-0 start-0 m-3 z-1">
+                                <span class="badge-glass shadow-sm">
+                                    <i class="bi bi-journal-text me-1 text-warning"></i> ക്ലാസ് {{ item.class.order }}
+                                </span>
+                            </div>
+
+                            <!-- Completed Status Badge Top-Right -->
+                            {% if item.is_completed %}
+                            <div class="position-absolute top-0 end-0 m-3 z-1">
+                                <span class="badge bg-success rounded-pill px-3 py-2 shadow-sm">
+                                    <i class="bi bi-check-circle-fill me-1"></i> പൂർത്തിയായി
+                                </span>
+                            </div>
+                            {% endif %}
+
+                            <!-- Center Play Overlay Button -->
+                            <div class="play-overlay">
+                                <div class="play-btn-circle">
+                                    <i class="bi bi-play-fill ps-1"></i>
+                                </div>
+                            </div>
+                        </a>
+                    {% else %}
+                        <div class="thumb-wrapper ratio ratio-16x9 d-block" style="cursor: pointer;" onclick="alert('ദയവായി മുമ്പത്തെ ക്ലാസ് കണ്ടു പൂർത്തിയാക്കുക. (Please watch and complete the previous class first.)');" title="Class {{ item.class.order }} is locked">
+                            {% if item.class.youtube_video_id %}
+                            <img src="https://img.youtube.com/vi/{{ item.class.youtube_video_id }}/hqdefault.jpg" 
+                                 class="thumb-img" 
+                                 alt="{{ item.class.title }}"
+                                 loading="lazy"
+                                 onerror="this.onerror=null; this.src='https://img.youtube.com/vi/{{ item.class.youtube_video_id }}/mqdefault.jpg';">
+                            {% else %}
+                            <div class="d-flex align-items-center justify-content-center h-100 text-muted bg-dark">
+                                <i class="bi bi-camera-video fs-1"></i>
+                            </div>
+                            {% endif %}
+
+                            <!-- Class Order Pill Top-Left -->
+                            <div class="position-absolute top-0 start-0 m-3 z-1">
+                                <span class="badge-glass shadow-sm">
+                                    <i class="bi bi-journal-text me-1 text-warning"></i> ക്ലാസ് {{ item.class.order }}
+                                </span>
+                            </div>
+
+                            <!-- Locked Status Overlay -->
+                            <div class="locked-overlay text-center px-3">
+                                <i class="bi bi-lock-fill fs-2 mb-1 text-white-50"></i>
+                                <span class="small fw-semibold text-white">മുമ്പത്തെ ക്ലാസ് കാണുക</span>
+                                <span class="small text-white-50" style="font-size: 0.75rem;">(Complete Previous Class)</span>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Card Body -->
+                    <div class="card-body d-flex flex-column p-4">
+                        <h5 class="card-title fw-bold mb-2" style="color: #1e3c72; line-height: 1.4;">
+                            {% if item.is_completed or item.is_unlocked %}
+                            <a href="{% url 'classroom' item.class.id %}" class="text-decoration-none" style="color: inherit;">
+                                {{ item.class.title }}
+                            </a>
+                            {% else %}
+                            <span style="cursor: pointer;" onclick="alert('ദയവായി മുമ്പത്തെ ക്ലാസ് കണ്ടു പൂർത്തിയാക്കുക. (Please watch and complete the previous class first.)');">
+                                {{ item.class.title }}
+                            </span>
+                            {% endif %}
+                        </h5>
+                        {% if item.class.description %}
+                        <p class="text-muted small mb-4 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5;">
+                            {{ item.class.description }}
+                        </p>
+                        {% else %}
+                        <div class="flex-grow-1 mb-4"></div>
+                        {% endif %}
                         
                         <div class="mt-auto">
                             {% if item.is_completed %}
-                            <a href="{% url 'classroom' item.class.id %}" class="btn btn-success w-100 rounded-pill py-2 shadow-sm border-0">
-                                <i class="bi bi-check-circle-fill me-2"></i> Completed (Watch Again)
+                            <a href="{% url 'classroom' item.class.id %}" class="btn btn-success w-100 rounded-pill py-2 shadow-sm border-0 fw-semibold">
+                                <i class="bi bi-arrow-repeat me-1"></i> Watch Again (വീണ്ടും കാണുക)
                             </a>
                             {% elif item.is_unlocked %}
-                                <a href="{% url 'classroom' item.class.id %}" class="btn btn-primary w-100 rounded-pill py-2 shadow-sm" style="background: linear-gradient(135deg, #4d0b5a, #b10f54); border: none;">
-                                    <i class="bi bi-play-circle-fill me-2"></i> Watch Now
-                                </a>
+                            <a href="{% url 'classroom' item.class.id %}" class="btn btn-primary w-100 rounded-pill py-2 shadow-sm fw-semibold" style="background: linear-gradient(135deg, #4d0b5a, #b10f54); border: none;">
+                                <i class="bi bi-play-circle-fill me-1"></i> Watch Now (ക്ലാസ് കാണുക)
+                            </a>
                             {% else %}
-                                <button class="btn btn-secondary w-100 rounded-pill py-2" onclick="alert('Please watch and complete the previous class first.');">
-                                    <i class="bi bi-lock-fill me-2"></i> Locked
-                                </button>
+                            <button class="btn btn-secondary w-100 rounded-pill py-2 fw-semibold opacity-75" onclick="alert('ദയവായി മുമ്പത്തെ ക്ലാസ് കണ്ടു പൂർത്തിയാക്കുക. (Please watch and complete the previous class first.)');">
+                                <i class="bi bi-lock-fill me-1"></i> Locked (ലോക്ക് ചെയ്തതാണ്)
+                            </button>
                             {% endif %}
                         </div>
                     </div>
@@ -40,8 +232,8 @@
         {% empty %}
             <div class="col-12 text-center py-5">
                 <i class="bi bi-camera-video display-1 text-muted mb-3 d-block" style="opacity: 0.2;"></i>
-                <h4 class="text-muted">No classes have been uploaded yet.</h4>
-                <p class="text-muted mb-0">Please check back later.</p>
+                <h4 class="text-muted">ക്ലാസുകൾ ഒന്നും ലഭ്യമായിട്ടില്ല. (No classes uploaded yet.)</h4>
+                <p class="text-muted mb-0">ദയവായി പിന്നീട് വീണ്ടും ശ്രമിക്കുക.</p>
             </div>
         {% endfor %}
     </div>

@@ -69,6 +69,12 @@ class CourseClass(models.Model):
     class Meta:
         ordering = ['order']
 
+    @property
+    def thumbnail_url(self):
+        if self.youtube_video_id:
+            return f"https://img.youtube.com/vi/{self.youtube_video_id}/hqdefault.jpg"
+        return ""
+
     def __str__(self):
         return f"Class {self.order}: {self.title}"
 

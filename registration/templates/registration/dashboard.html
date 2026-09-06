@@ -113,6 +113,11 @@
         <i class="bi bi-youtube me-2 fs-4 align-middle"></i> Manage Classes
     </button>
   </li>
+  <li class="nav-item" role="presentation">
+    <a href="{% url 'student_dashboard' %}" class="nav-link fw-bold d-inline-flex align-items-center" target="_blank" style="background-color: #fff; border: 2px dashed #4d0b5a !important; color: #4d0b5a !important;">
+        <i class="bi bi-display me-2 fs-4 align-middle text-primary"></i> Preview Student View <i class="bi bi-box-arrow-up-right ms-2 small"></i>
+    </a>
+  </li>
 </ul>
 
 <div class="tab-content" id="adminTabsContent">
@@ -292,11 +297,16 @@
   <!-- CLASSES TAB -->
   <div class="tab-pane fade" id="classes" role="tabpanel">
       <div class="card shadow-sm border-0 mb-4">
-          <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+          <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center py-3 gap-2">
               <h5 class="mb-0 fw-bold">Course Classes</h5>
-              <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addClassModal">
-                  <i class="bi bi-plus-lg me-1"></i> Add Class
-              </button>
+              <div class="d-flex gap-2">
+                  <a href="{% url 'student_dashboard' %}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill fw-bold">
+                      <i class="bi bi-display me-1"></i> Preview as Student
+                  </a>
+                  <button type="button" class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#addClassModal">
+                      <i class="bi bi-plus-lg me-1"></i> Add Class
+                  </button>
+              </div>
           </div>
           <div class="card-body p-0">
               <table class="table table-hover align-middle mb-0">
@@ -312,7 +322,17 @@
                       {% for c in course_classes %}
                       <tr>
                           <td class="px-4 py-3 text-center"><span class="badge bg-secondary">{{ c.order }}</span></td>
-                          <td class="px-4 py-3 fw-bold">{{ c.title }}</td>
+                          <td class="px-4 py-3 fw-bold">
+                              <div class="d-flex align-items-center">
+                                  {% if c.youtube_video_id %}
+                                  <img src="https://img.youtube.com/vi/{{ c.youtube_video_id }}/mqdefault.jpg" class="rounded-3 me-3 shadow-xs border" style="width: 60px; height: 36px; object-fit: cover;" alt="thumb">
+                                  {% endif %}
+                                  <div>
+                                      <div>{{ c.title }}</div>
+                                      {% if c.description %}<small class="text-muted fw-normal text-truncate d-block" style="max-width: 250px;">{{ c.description }}</small>{% endif %}
+                                  </div>
+                              </div>
+                          </td>
                           <td class="px-4 py-3 text-muted"><code>{{ c.youtube_video_id }}</code></td>
                           <td class="px-4 py-3 text-end">
                               <button type="button" class="btn btn-outline-primary btn-sm rounded-circle me-1" data-bs-toggle="modal" data-bs-target="#editClassModal{{ c.id }}"><i class="bi bi-pencil"></i></button>

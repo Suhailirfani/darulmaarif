@@ -220,4 +220,71 @@ class RegistrationEditTestCase(TestCase):
         response = self.client.get(reverse('student_dashboard'))
         self.assertContains(response, 'Class 2 Scheduled')
 
+    def test_user_profile_edit_for_student(self):
+        # Student logs in
+        self.client.login(username='9876543210', password=f"APP-{self.reg.application_number}")
+
+        # Access profile edit page
+        response = self.client.get(reverse('user_profile_edit'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f"APP-{self.reg.application_number}")
+        self.assertContains(response, "പ്രൊഫൈൽ വിവരങ്ങൾ തിരുത്തുക")
+
+        # Edit name, mobile, and password
+        response = self.client.post(reverse('user_profile_edit'), {
+            'name': 'Student Renamed',
+            'username': '9876543210_updated',
+            'mobile': '9876543210',
+            'whatsapp': '9876543210',
+            'password': 'newpassword123',
+            'confirm_password': 'newpassword123',
+        })
+        self.assertRedirects(response, reverse('user_profile_edit'))
+
+        # Verify user and registration updated
+        user = User.objects.get(username='9876543210_updated')
+        self.assertEqual(user.first_name, 'Student Renamed')
+        self.assertTrue(user.check_password('newpassword123'))
+
+        self.reg.refresh_from_db()
+        self.assertEqual(self.reg.name, 'Student Renamed')
+
+        # Test leave password blank -> password stays unchanged
+        response = self.client.post(reverse('user_profile_edit'), {
+            'name': 'Student Renamed Again',
+            'username': '9876543210_updated',
+            'mobile': '9876543210',
+            'whatsapp': '9876543210',
+            'password': '',
+            'confirm_password': '',
+        })
+        self.assertRedirects(response, reverse('user_profile_edit'))
+
+        user.refresh_from_db()
+        self.assertEqual(user.first_name, 'Student Renamed Again')
+        self.assertTrue(user.check_password('newpassword123'))
+
+    def test_user_profile_edit_for_admin_and_mentor(self):
+        # Admin logs in
+        self.client.login(username='admin_test', password='password123')
+
+        response = self.client.get(reverse('user_profile_edit'))
+        self.assertEqual(response.status_code, 200)
+
+        # Admin edits details
+        response = self.client.post(reverse('user_profile_edit'), {
+            'name': 'Super Admin Updated',
+            'username': 'admin_updated',
+            'mobile': '1234567890',
+            'password': 'newadminpass123',
+            'confirm_password': 'newadminpass123',
+        })
+        self.assertRedirects(response, reverse('user_profile_edit'))
+
+        self.admin_user.refresh_from_db()
+        self.assertEqual(self.admin_user.username, 'admin_updated')
+        self.assertEqual(self.admin_user.first_name, 'Super Admin Updated')
+        self.assertTrue(self.admin_user.check_password('newadminpass123'))
+
+
 

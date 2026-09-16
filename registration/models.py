@@ -101,6 +101,9 @@ class StudentProgress(models.Model):
 # Signal to auto-create User when Registration is_paid becomes True or sync details
 @receiver(post_save, sender=Registration)
 def create_student_user(sender, instance, created, **kwargs):
+    if getattr(instance, '_skip_user_sync', False):
+        return
+
     if instance.is_paid:
         # Check if student profile already exists for this registration
         profile = UserProfile.objects.filter(registration=instance).first()
@@ -111,15 +114,16 @@ def create_student_user(sender, instance, created, **kwargs):
             if user.first_name != instance.name:
                 user.first_name = instance.name
                 updated = True
-            if user.username != instance.mobile:
-                # Only update username if target mobile isn't taken by another user
-                conflicting_user = User.objects.filter(username=instance.mobile).exclude(pk=user.pk).first()
-                if conflicting_user:
-                    # Clear out conflicting user/profile if it's an orphaned duplicate
-                    UserProfile.objects.filter(user=conflicting_user).exclude(pk=profile.pk).delete()
-                    conflicting_user.delete()
-                user.username = instance.mobile
-                updated = True
+            if not getattr(instance, '_skip_username_sync', False):
+                if user.username != instance.mobile:
+                    # Only update username if target mobile isn't taken by another user
+                    conflicting_user = User.objects.filter(username=instance.mobile).exclude(pk=user.pk).first()
+                    if conflicting_user:
+                        # Clear out conflicting user/profile if it's an orphaned duplicate
+                        UserProfile.objects.filter(user=conflicting_user).exclude(pk=profile.pk).delete()
+                        conflicting_user.delete()
+                    user.username = instance.mobile
+                    updated = True
             if updated:
                 user.save()
             return

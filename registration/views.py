@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.contrib.auth import update_session_auth_hash
 from .models import Registration, CourseClass, StudentProgress, UserProfile, AppSetting
 from .forms import RegistrationForm, PaymentCompletionForm
 import csv
@@ -645,3 +646,73 @@ def edit_my_registration_view(request):
             return redirect('register_success', pk=reg.pk)
 
     return render(request, 'registration/edit_my_registration.html', {'reg': reg})
+
+
+@login_required
+def user_profile_edit_view(request):
+    profile = get_or_create_user_profile(request.user)
+    reg = getattr(profile, 'registration', None) if profile else None
+    if not reg:
+        reg = Registration.objects.filter(mobile=request.user.username).first()
+
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        username = request.POST.get('username', '').strip()
+        mobile = request.POST.get('mobile', '').strip()
+        whatsapp = request.POST.get('whatsapp', '').strip()
+        new_password = request.POST.get('password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+
+        errors = []
+
+        if not name:
+            errors.append("പേര് നൽകേണ്ടതുണ്ട്. (Name is required.)")
+
+        if not username:
+            errors.append("യൂസർനെയിം നൽകേണ്ടതുണ്ട്. (Username is required.)")
+        elif User.objects.filter(username=username).exclude(pk=request.user.pk).exists():
+            errors.append(f"'{username}' എന്ന യൂസർനെയിം ഇതിനകം മറ്റൊരു അക്കൗണ്ടിൽ നിലവിലുണ്ട്. (This username is already taken.)")
+
+        if reg and mobile:
+            if Registration.objects.filter(mobile=mobile).exclude(pk=reg.pk).exists():
+                errors.append(f"'{mobile}' എന്ന മൊബൈൽ നമ്പർ ഇതിനകം മറ്റൊരു അപേക്ഷകൻ രജിസ്റ്റർ ചെയ്തിട്ടുണ്ട്. (Mobile number is already registered by another applicant.)")
+
+        if new_password:
+            if len(new_password) < 4:
+                errors.append("പാസ്‌വേഡിൽ കുറഞ്ഞത് 4 അക്ഷരങ്ങൾ/അക്കങ്ങൾ ഉണ്ടായിരിക്കണം. (Password must be at least 4 characters long.)")
+            elif new_password != confirm_password:
+                errors.append("നൽകിയ പാസ്‌വേഡുകൾ പരസ്പരം പൊരുത്തപ്പെടുന്നില്ല. (Passwords do not match.)")
+
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+        else:
+            # Update user details
+            user = request.user
+            user.first_name = name
+            user.username = username
+            if new_password:
+                user.set_password(new_password)
+            user.save()
+
+            if new_password:
+                update_session_auth_hash(request, user)
+
+            # Update registration details if linked
+            if reg:
+                reg.name = name
+                if mobile:
+                    reg.mobile = mobile
+                if whatsapp:
+                    reg.whatsapp = whatsapp
+                reg._skip_username_sync = True
+                reg.save()
+
+            messages.success(request, "നിങ്ങളുടെ പ്രൊഫൈൽ വിവരങ്ങൾ വിജയകരമായി പുതുക്കി! (Profile updated successfully!)")
+            return redirect('user_profile_edit')
+
+    return render(request, 'registration/profile_edit.html', {
+        'profile': profile,
+        'reg': reg,
+    })
+

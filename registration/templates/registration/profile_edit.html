@@ -1,0 +1,162 @@
+{% extends 'registration/base.html' %}
+{% load static %}
+
+{% block title %}My Profile (പ്രൊഫൈൽ) - Online Dars{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Header Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="background: linear-gradient(135deg, #4d0b5a, #82104d); color: white;">
+                <div class="card-body p-4 d-flex flex-column flex-sm-row align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 76px; height: 76px; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(8px); font-size: 2.2rem; flex-shrink: 0;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div class="text-center text-sm-start flex-grow-1">
+                        <h4 class="fw-bold mb-1">{{ request.user.first_name|default:request.user.username }}</h4>
+                        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-sm-start gap-2">
+                            <span class="badge bg-white text-dark rounded-pill px-3 py-1 fw-bold shadow-xs">
+                                <i class="bi bi-shield-check me-1 text-primary"></i>
+                                {% if profile.role == 'ADMIN' %}Admin
+                                {% elif profile.role == 'MENTOR' %}Mentor
+                                {% else %}Student
+                                {% endif %}
+                            </span>
+                            {% if reg %}
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-bold shadow-xs">
+                                <i class="bi bi-card-heading me-1"></i> APP-{{ reg.application_number }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-light rounded-pill btn-sm px-3 shadow-xs text-nowrap">
+                        <i class="bi bi-arrow-left me-1"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Profile Form Card -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <h5 class="fw-bold mb-3" style="color: #4d0b5a;">
+                        <i class="bi bi-pencil-square me-2"></i>പ്രൊഫൈൽ വിവരങ്ങൾ തിരുത്തുക (Edit Profile)
+                    </h5>
+
+                    <!-- Helpful Malayalam Notice Banner -->
+                    <div class="alert alert-info border-0 rounded-4 p-3 mb-4 shadow-xs" style="background-color: #f0f7ff; color: #104c82;">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-info-circle-fill fs-5 mt-1 text-primary"></i>
+                            <div class="small">
+                                <strong class="d-block mb-1">പ്രധാന നിർദ്ദേശങ്ങൾ (Instructions):</strong>
+                                <ul class="mb-0 ps-3" style="line-height: 1.6;">
+                                    <li>മാറ്റം വരുത്താൻ ആഗ്രഹിക്കാത്ത വിവരങ്ങൾ അതേപടി നിലനിർത്തുക.</li>
+                                    <li><strong>പാസ്‌വേഡ് മാറ്റേണ്ടതില്ലെങ്കിൽ</strong> പാസ്‌വേഡ് ഫീൽഡ് ശൂന്യമായി (Blank) ഇടുക.</li>
+                                    <li>പാസ്‌വേഡ് എളുപ്പത്തിൽ ഓർമ്മിക്കാൻ നിങ്ങളുടെ <strong>അപേക്ഷാ നമ്പർ</strong> (ഉദാ: APP-{{ reg.application_number|default:'001' }}) അല്ലെങ്കിൽ <strong>മൊബൈൽ നമ്പർ</strong> നൽകുന്നത് നല്ലതാണ്.</li>
+                                    {% if reg %}
+                                    <li>അപേക്ഷാ നമ്പർ (Application Number) സിസ്റ്റം നിശ്ചയിച്ചതായതിനാൽ മാറ്റാൻ സാധിക്കില്ല.</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{% url 'user_profile_edit' %}">
+                        {% csrf_token %}
+
+                        {% if reg %}
+                        <!-- Read-only Application Number -->
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold">
+                                അപേക്ഷാ നമ്പർ (Application Number) - <span class="text-secondary fw-normal">മാറ്റാൻ കഴിയില്ല</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock-fill"></i></span>
+                                <input type="text" class="form-control bg-light border-start-0" value="APP-{{ reg.application_number }}" readonly disabled style="cursor: not-allowed; font-weight: bold; color: #4d0b5a;">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Full Name -->
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold">പൂർണ്ണ നാമം (Full Name) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-person"></i></span>
+                                <input type="text" name="name" class="form-control bg-light border-start-0 ps-0" value="{{ initial_name }}" required placeholder="Enter full name">
+                            </div>
+                        </div>
+
+                        <!-- Username / Login ID -->
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold">യൂസർനെയിം / Login ID <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-at"></i></span>
+                                <input type="text" name="username" class="form-control bg-light border-start-0 ps-0" value="{{ request.user.username }}" required placeholder="Enter login username">
+                            </div>
+                            <div class="form-text small text-muted">ലോഗിൻ ചെയ്യുന്നതിനായി ഉപയോഗിക്കുന്ന യൂസർനെയിം.</div>
+                        </div>
+
+                        <!-- Mobile & WhatsApp Numbers -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-{% if reg %}6{% else %}12{% endif %}">
+                                <label class="form-label text-muted small fw-bold">മൊബൈൽ നമ്പർ (Mobile Number)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-telephone"></i></span>
+                                    <input type="text" name="mobile" class="form-control bg-light border-start-0 ps-0" value="{{ initial_mobile }}" placeholder="Mobile number">
+                                </div>
+                            </div>
+                            {% if reg %}
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">വാട്സ്ആപ്പ് നമ്പർ (WhatsApp Number)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-whatsapp text-success"></i></span>
+                                    <input type="text" name="whatsapp" class="form-control bg-light border-start-0 ps-0" value="{{ initial_whatsapp }}" placeholder="WhatsApp number">
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password Section -->
+                        <div class="card border rounded-4 p-3 p-md-4 mb-4" style="background-color: #fdfafc; border-color: #f1dfec !important;">
+                            <h6 class="fw-bold mb-2" style="color: #4d0b5a;">
+                                <i class="bi bi-key-fill me-1"></i>പാസ്‌വേഡ് മാറ്റുക (Change Password)
+                            </h6>
+                            <p class="small text-muted mb-3">
+                                പാസ്‌വേഡ് മാറ്റാൻ ആഗ്രഹിക്കുന്നില്ലെങ്കിൽ താഴെയുള്ള ഫീൽഡുകൾ ശൂന്യമായി ഇടുക. (Leave blank if you don't want to change password.)
+                            </p>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small fw-bold">പുതിയ പാസ്‌വേഡ് (New Password)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
+                                        <input type="password" name="password" id="newPasswordInput" class="form-control bg-light border-start-0 ps-0" placeholder="Leave blank to keep unchanged">
+                                    </div>
+                                    <div class="form-text small text-muted">ഓർമ്മിക്കാൻ എളുപ്പമുള്ള പാസ്‌വേഡ് നൽകുക.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small fw-bold">പാസ്‌വേഡ് സ്ഥിരീകരിക്കുക (Confirm Password)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-check2-circle"></i></span>
+                                        <input type="password" name="confirm_password" id="confirmPasswordInput" class="form-control bg-light border-start-0 ps-0" placeholder="Re-type new password">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4 py-2">
+                                റദ്ദാക്കുക (Cancel)
+                            </a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-semibold shadow-sm" style="background: linear-gradient(135deg, #4d0b5a, #b10f54); border: none;">
+                                <i class="bi bi-save2 me-1"></i> വിവരങ്ങൾ സേവ് ചെയ്യുക (Save Changes)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

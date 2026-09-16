@@ -20,6 +20,7 @@ urlpatterns = [
     path('dashboard/student/', views.student_dashboard_view, name='student_dashboard'),
     path('dashboard/mentor/', views.mentor_dashboard_view, name='mentor_dashboard'),
     path('classroom/<int:class_id>/', views.classroom_view, name='classroom'),
+    path('profile/', views.user_profile_edit_view, name='user_profile_edit'),
     path('export/excel/', views.export_excel_view, name='export_excel'),
     path('sw.js', views.service_worker_view, name='service_worker'),
 ]

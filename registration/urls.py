@@ -16,7 +16,6 @@ urlpatterns = [
     path('dashboard/admin/edit-registration/', views.admin_edit_registration_view, name='admin_edit_registration'),
     path('dashboard/admin/print-registration/<int:pk>/', views.admin_print_registration_view, name='admin_print_registration'),
     path('dashboard/admin/pending/', views.admin_pending_payments_view, name='admin_pending_payments'),
-    path('dashboard/admin/links/', views.admin_manage_link_view, name='admin_manage_link'),
     path('dashboard/admin/toggle-lock/', views.admin_toggle_lock_view, name='admin_toggle_lock'),
     path('dashboard/student/', views.student_dashboard_view, name='student_dashboard'),
     path('dashboard/mentor/', views.mentor_dashboard_view, name='mentor_dashboard'),

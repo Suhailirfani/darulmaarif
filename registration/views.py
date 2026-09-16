@@ -100,20 +100,43 @@ def register_success(request, pk):
     reg = get_object_or_404(Registration, pk=pk)
     return render(request, 'registration/success.html', {'reg': reg})
 
+def get_or_create_user_profile(user):
+    """
+    Safely retrieves the UserProfile for the given user, or creates one if missing.
+    Links the profile to matching Registration if available.
+    """
+    if not user.is_authenticated:
+        return None
+    try:
+        profile = user.profile
+    except (UserProfile.DoesNotExist, AttributeError):
+        if user.is_superuser:
+            profile, _ = UserProfile.objects.get_or_create(user=user, defaults={'role': 'ADMIN'})
+        else:
+            reg = Registration.objects.filter(mobile=user.username).first()
+            profile, _ = UserProfile.objects.get_or_create(
+                user=user,
+                defaults={'role': 'STUDENT', 'registration': reg}
+            )
+            if reg and not profile.registration:
+                profile.registration = reg
+                profile.save()
+    return profile
+
 @login_required
 def dashboard_router(request):
-    try:
-        profile = request.user.profile
-        if profile.role == 'ADMIN':
+    profile = get_or_create_user_profile(request.user)
+    if profile:
+        if profile.role == 'ADMIN' or request.user.is_superuser:
             return redirect('admin_dashboard')
         elif profile.role == 'MENTOR':
             return redirect('mentor_dashboard')
         else:
             return redirect('student_dashboard')
-    except:
-        if request.user.is_superuser:
-            return redirect('admin_dashboard')
-        return redirect('landing')
+    
+    if request.user.is_superuser:
+        return redirect('admin_dashboard')
+    return redirect('student_dashboard')
 
 @login_required
 def admin_dashboard_view(request):
@@ -377,9 +400,10 @@ def export_excel_view(request):
 
 @login_required
 def student_dashboard_view(request):
-    is_admin = request.user.is_superuser or (getattr(request.user, 'profile', None) and request.user.profile.role == 'ADMIN')
-    if not is_admin and getattr(request.user, 'profile', None) and request.user.profile.role != 'STUDENT':
-        return redirect('landing')
+    profile = get_or_create_user_profile(request.user)
+    is_admin = request.user.is_superuser or (profile and profile.role == 'ADMIN')
+    if not is_admin and profile and profile.role == 'MENTOR':
+        return redirect('mentor_dashboard')
         
     classes = CourseClass.objects.all().order_by('order')
     progress_list = StudentProgress.objects.filter(student=request.user)
@@ -405,9 +429,10 @@ def student_dashboard_view(request):
 
 @login_required
 def classroom_view(request, class_id):
-    is_admin = request.user.is_superuser or (getattr(request.user, 'profile', None) and request.user.profile.role == 'ADMIN')
-    if not is_admin and getattr(request.user, 'profile', None) and request.user.profile.role != 'STUDENT':
-        return redirect('landing')
+    profile = get_or_create_user_profile(request.user)
+    is_admin = request.user.is_superuser or (profile and profile.role == 'ADMIN')
+    if not is_admin and profile and profile.role == 'MENTOR':
+        return redirect('mentor_dashboard')
         
     course_class = get_object_or_404(CourseClass, id=class_id)
     

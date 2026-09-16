@@ -120,14 +120,22 @@ def create_student_user(sender, instance, created, **kwargs):
                 password=f"APP-{instance.application_number}",
                 first_name=instance.name
             )
+        else:
+            if user.first_name != instance.name:
+                user.first_name = instance.name
+                user.save()
         
-        # Link user and profile if not linked
-        if not hasattr(user, 'profile'):
+        # Link user and profile
+        profile = UserProfile.objects.filter(user=user).first()
+        if not profile:
             UserProfile.objects.create(
                 user=user,
                 role='STUDENT',
                 registration=instance
             )
+        elif not profile.registration:
+            profile.registration = instance
+            profile.save()
 
 class AppSetting(models.Model):
     key = models.CharField(max_length=50, unique=True)

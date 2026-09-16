@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Registration, UserProfile, CourseClass, StudentProgress
+from .models import Registration, UserProfile, CourseClass, StudentProgress, DashboardLink
 
 @admin.register(Registration)
 class RegistrationAdmin(admin.ModelAdmin):
@@ -22,3 +22,9 @@ class StudentProgressAdmin(admin.ModelAdmin):
     list_display = ('student', 'course_class', 'is_completed', 'completed_at')
     list_filter = ('is_completed', 'course_class')
     search_fields = ('student__username',)
+
+@admin.register(DashboardLink)
+class DashboardLinkAdmin(admin.ModelAdmin):
+    list_display = ('title', 'url', 'publish_at', 'expires_at', 'is_active', 'status_label')
+    list_filter = ('is_active', 'publish_at')
+    search_fields = ('title', 'url', 'description')

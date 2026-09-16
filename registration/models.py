@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 class Registration(models.Model):
     name = models.CharField(max_length=255)
@@ -151,4 +152,41 @@ class AppSetting(models.Model):
 
     def __str__(self):
         return f"{self.key}: {self.value_bool}"
+
+class DashboardLink(models.Model):
+    title = models.CharField(max_length=255, help_text="Link title or headline (e.g. Live Class / Zoom Link / Exam Portal)")
+    url = models.URLField(max_length=500, help_text="Full destination URL (e.g. https://meet.google.com/...)")
+    description = models.TextField(blank=True, help_text="Optional description or instructions for students")
+    publish_at = models.DateTimeField(help_text="Scheduled date and time to display this link to students")
+    expires_at = models.DateTimeField(null=True, blank=True, help_text="Optional date and time when this link should automatically expire")
+    is_active = models.BooleanField(default=True, help_text="Toggle link active status")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-publish_at']
+
+    @property
+    def is_currently_live(self):
+        now = timezone.now()
+        if not self.is_active:
+            return False
+        if self.publish_at > now:
+            return False
+        if self.expires_at and self.expires_at < now:
+            return False
+        return True
+
+    @property
+    def status_label(self):
+        now = timezone.now()
+        if not self.is_active:
+            return 'Inactive'
+        if self.publish_at > now:
+            return 'Scheduled'
+        if self.expires_at and self.expires_at < now:
+            return 'Expired'
+        return 'Live'
+
+    def __str__(self):
+        return f"{self.title} ({self.status_label})"
 

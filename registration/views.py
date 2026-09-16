@@ -3,10 +3,11 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
-from .models import Registration, CourseClass, StudentProgress, UserProfile, AppSetting
+from .models import Registration, CourseClass, StudentProgress, UserProfile, AppSetting, DashboardLink
 from .forms import RegistrationForm, PaymentCompletionForm
 import csv
 from datetime import datetime
+from django.utils import timezone
 import openpyxl
 from django.db.models import Q
 
@@ -162,6 +163,7 @@ def admin_dashboard_view(request):
     mentors = UserProfile.objects.filter(role='MENTOR')
     course_classes = CourseClass.objects.all().order_by('order')
     students = UserProfile.objects.filter(role='STUDENT')
+    scheduled_links = DashboardLink.objects.all().order_by('-publish_at')
     
     reg_setting, _ = AppSetting.objects.get_or_create(key='registration_locked', defaults={'value_bool': False})
     is_locked = reg_setting.value_bool
@@ -174,6 +176,7 @@ def admin_dashboard_view(request):
         'mentors': mentors,
         'course_classes': course_classes,
         'students': students,
+        'scheduled_links': scheduled_links,
         'is_locked': is_locked,
     }
     return render(request, 'registration/dashboard.html', context)
@@ -259,6 +262,108 @@ def admin_manage_class_view(request):
             CourseClass.objects.filter(id=class_id).delete()
             
     return redirect('admin_dashboard')
+
+def parse_local_datetime(dt_str):
+    if not dt_str:
+        return None
+    try:
+        dt = datetime.fromisoformat(dt_str)
+        if timezone.is_naive(dt):
+            dt = timezone.make_aware(dt, timezone.get_current_timezone())
+        return dt
+    except Exception:
+        return None
+
+@login_required
+def admin_manage_link_view(request):
+    if not request.user.is_superuser and getattr(request.user, 'profile', None) and request.user.profile.role != 'ADMIN':
+        return redirect('landing')
+        
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'add':
+            title = request.POST.get('title', '').strip()
+            url = request.POST.get('url', '').strip()
+            description = request.POST.get('description', '').strip()
+            publish_at_str = request.POST.get('publish_at', '').strip()
+            expires_at_str = request.POST.get('expires_at', '').strip()
+            is_active = request.POST.get('is_active') == 'on'
+
+            if not title or not url or not publish_at_str:
+                messages.error(request, "ശീർഷകം, ലിങ്ക്, ലഭ്യമാകുന്ന സമയം എന്നിവ നിർബന്ധമാണ്. (Title, URL, and Scheduled Time are required.)")
+                return redirect_to_referer_or_dashboard(request)
+
+            if not (url.startswith('http://') or url.startswith('https://')):
+                url = 'https://' + url
+
+            publish_at = parse_local_datetime(publish_at_str)
+            if not publish_at:
+                messages.error(request, "അസാധുവായ സമയം നൽകി. (Invalid date/time format for publish time.)")
+                return redirect_to_referer_or_dashboard(request)
+
+            expires_at = parse_local_datetime(expires_at_str)
+
+            DashboardLink.objects.create(
+                title=title,
+                url=url,
+                description=description,
+                publish_at=publish_at,
+                expires_at=expires_at,
+                is_active=is_active
+            )
+            messages.success(request, f"ലിങ്ക് വിജയകരമായി ഷെഡ്യൂൾ ചെയ്തു: {title}. (Link scheduled successfully.)")
+
+        elif action == 'edit':
+            link_id = request.POST.get('link_id')
+            link_obj = get_object_or_404(DashboardLink, id=link_id)
+
+            title = request.POST.get('title', '').strip()
+            url = request.POST.get('url', '').strip()
+            description = request.POST.get('description', '').strip()
+            publish_at_str = request.POST.get('publish_at', '').strip()
+            expires_at_str = request.POST.get('expires_at', '').strip()
+            is_active = request.POST.get('is_active') == 'on'
+
+            if not title or not url or not publish_at_str:
+                messages.error(request, "ശീർഷകം, ലിങ്ക്, ലഭ്യമാകുന്ന സമയം എന്നിവ നിർബന്ധമാണ്.")
+                return redirect_to_referer_or_dashboard(request)
+
+            if not (url.startswith('http://') or url.startswith('https://')):
+                url = 'https://' + url
+
+            publish_at = parse_local_datetime(publish_at_str)
+            if not publish_at:
+                messages.error(request, "അസാധുവായ സമയം.")
+                return redirect_to_referer_or_dashboard(request)
+
+            expires_at = parse_local_datetime(expires_at_str)
+
+            link_obj.title = title
+            link_obj.url = url
+            link_obj.description = description
+            link_obj.publish_at = publish_at
+            link_obj.expires_at = expires_at
+            link_obj.is_active = is_active
+            link_obj.save()
+            messages.success(request, f"ലിങ്ക് വിവരങ്ങൾ പുതുക്കി: {title}.")
+
+        elif action == 'toggle':
+            link_id = request.POST.get('link_id')
+            link_obj = get_object_or_404(DashboardLink, id=link_id)
+            link_obj.is_active = not link_obj.is_active
+            link_obj.save()
+            status_text = "ആക്ടീവ് ആക്കി (Activated)" if link_obj.is_active else "നിഷ്ക്രിയമാക്കി (Deactivated)"
+            messages.success(request, f"{link_obj.title} എന്ന ലിങ്ക് {status_text}.")
+
+        elif action == 'delete':
+            link_id = request.POST.get('link_id')
+            link_obj = get_object_or_404(DashboardLink, id=link_id)
+            title = link_obj.title
+            link_obj.delete()
+            messages.success(request, f"{title} എന്ന ലിങ്ക് നീക്കം ചെയ്തു. (Link deleted.)")
+
+    return redirect_to_referer_or_dashboard(request)
 
 @login_required
 def admin_manage_mentor_view(request):
@@ -429,8 +534,22 @@ def student_dashboard_view(request):
         })
         is_unlocked = completed
         
+    now = timezone.now()
+    if is_admin:
+        # In Admin Preview mode, show all links so admin can inspect them
+        scheduled_links = DashboardLink.objects.all().order_by('-publish_at')
+    else:
+        # For students: ONLY show active links whose publish_at <= now and not expired
+        scheduled_links = DashboardLink.objects.filter(
+            is_active=True,
+            publish_at__lte=now
+        ).filter(
+            Q(expires_at__isnull=True) | Q(expires_at__gt=now)
+        ).order_by('-publish_at')
+
     return render(request, 'registration/student_dashboard.html', {
         'class_data': class_data,
+        'scheduled_links': scheduled_links,
         'is_admin_preview': is_admin
     })
 

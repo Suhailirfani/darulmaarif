@@ -1,7 +1,9 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from registration.models import Registration, UserProfile
+from django.utils import timezone
+from datetime import timedelta
+from registration.models import Registration, UserProfile, DashboardLink
 
 class RegistrationEditTestCase(TestCase):
     def setUp(self):
@@ -160,5 +162,78 @@ class RegistrationEditTestCase(TestCase):
 
         old_profile.refresh_from_db()
         self.assertIsNone(old_profile.registration)
+
+    def test_scheduled_links_admin_crud_and_student_visibility(self):
+        # 1. Admin adds a future scheduled link
+        self.client.login(username='admin_test', password='password123')
+        now_local = timezone.localtime(timezone.now())
+        future_time = now_local + timedelta(hours=2)
+        past_time = now_local - timedelta(hours=1)
+        
+        response = self.client.post(reverse('admin_manage_link'), {
+            'action': 'add',
+            'title': 'Future Live Meet',
+            'url': 'https://meet.google.com/abc-def-ghi',
+            'description': 'Join the live class at 8 PM',
+            'publish_at': future_time.strftime('%Y-%m-%dT%H:%M'),
+            'is_active': 'on'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(DashboardLink.objects.count(), 1)
+        future_link = DashboardLink.objects.get(title='Future Live Meet')
+        self.assertEqual(future_link.status_label, 'Scheduled')
+        self.assertFalse(future_link.is_currently_live)
+
+        # 2. Admin adds a currently active link
+        response = self.client.post(reverse('admin_manage_link'), {
+            'action': 'add',
+            'title': 'Live Class Now',
+            'url': 'zoom.us/j/123456789',  # testing auto-https prefixing
+            'description': 'Join now for Q&A',
+            'publish_at': past_time.strftime('%Y-%m-%dT%H:%M'),
+            'is_active': 'on'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(DashboardLink.objects.count(), 2)
+        live_link = DashboardLink.objects.get(title='Live Class Now')
+        self.assertEqual(live_link.url, 'https://zoom.us/j/123456789')
+        self.assertEqual(live_link.status_label, 'Live')
+        self.assertTrue(live_link.is_currently_live)
+
+        # 3. Student logs in: Student should ONLY see the active/live link, NOT the future scheduled link
+        self.client.logout()
+        student_user = User.objects.get(username='9876543210')
+        self.client.force_login(student_user)
+
+        response = self.client.get(reverse('student_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Live Class Now')
+        self.assertNotContains(response, 'Future Live Meet')
+
+        # 4. Admin Preview view: Admin sees both links
+        self.client.logout()
+        self.client.login(username='admin_test', password='password123')
+        response = self.client.get(reverse('student_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Live Class Now')
+        self.assertContains(response, 'Future Live Meet')
+        self.assertContains(response, 'Admin Preview Mode')
+
+        # 5. Toggle link active status
+        response = self.client.post(reverse('admin_manage_link'), {
+            'action': 'toggle',
+            'link_id': live_link.id
+        })
+        self.assertEqual(response.status_code, 302)
+        live_link.refresh_from_db()
+        self.assertFalse(live_link.is_active)
+
+        # 6. Delete link
+        response = self.client.post(reverse('admin_manage_link'), {
+            'action': 'delete',
+            'link_id': future_link.id
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(DashboardLink.objects.count(), 1)
 
 

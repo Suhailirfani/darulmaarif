@@ -205,16 +205,58 @@ def admin_toggle_lock_view(request):
     return redirect('admin_dashboard')
 
 
-def parse_datetime_input(dt_str):
-    if not dt_str:
+def parse_datetime_input(post_data):
+    if not post_data:
         return None
-    try:
-        dt = datetime.fromisoformat(dt_str.strip())
-        if timezone.is_naive(dt):
-            return timezone.make_aware(dt)
-        return dt
-    except (ValueError, TypeError):
-        return None
+    
+    # 1. Check if separate date and 12-hour AM/PM fields are provided (from Request POST dict)
+    if hasattr(post_data, 'get'):
+        date_str = post_data.get('publish_date', '').strip()
+        if date_str:
+            try:
+                hour_str = post_data.get('publish_hour', '').strip()
+                minute_str = post_data.get('publish_minute', '00').strip()
+                ampm_str = post_data.get('publish_ampm', 'AM').strip().upper()
+                
+                if hour_str:
+                    hour = int(hour_str) % 12
+                    if ampm_str == 'PM':
+                        hour += 12
+                    minute = int(minute_str) if minute_str else 0
+                else:
+                    hour = 0
+                    minute = 0
+                    
+                dt = datetime.strptime(date_str, '%Y-%m-%d').replace(hour=hour, minute=minute)
+                if timezone.is_naive(dt):
+                    return timezone.make_aware(dt)
+                return dt
+            except (ValueError, TypeError):
+                pass
+
+        raw_val = post_data.get('publish_at', '').strip()
+    else:
+        raw_val = str(post_data).strip()
+
+    # 2. Fallback to raw string parsing (ISO or 12/24-hr formats)
+    if raw_val:
+        for fmt in ('%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %I:%M %p', '%Y-%m-%d %I:%M%p', '%Y-%m-%d'):
+            try:
+                dt = datetime.strptime(raw_val, fmt)
+                if timezone.is_naive(dt):
+                    return timezone.make_aware(dt)
+                return dt
+            except ValueError:
+                continue
+        try:
+            dt = datetime.fromisoformat(raw_val)
+            if timezone.is_naive(dt):
+                return timezone.make_aware(dt)
+            return dt
+        except (ValueError, TypeError):
+            pass
+
+    return None
 
 @login_required
 def admin_manage_class_view(request):
@@ -240,7 +282,7 @@ def admin_manage_class_view(request):
                 # Fallback, just try to take the last 11 characters if it's a weird url, or just save as is
                 vid_id = raw_vid[-11:] if len(raw_vid) > 11 else raw_vid
                 
-            publish_at = parse_datetime_input(request.POST.get('publish_at'))
+            publish_at = parse_datetime_input(request.POST)
             CourseClass.objects.create(
                 title=request.POST.get('title'),
                 youtube_video_id=vid_id,
@@ -262,7 +304,7 @@ def admin_manage_class_view(request):
             else:
                 vid_id = raw_vid[-11:] if len(raw_vid) > 11 else raw_vid
                 
-            publish_at = parse_datetime_input(request.POST.get('publish_at'))
+            publish_at = parse_datetime_input(request.POST)
             CourseClass.objects.filter(id=class_id).update(
                 title=request.POST.get('title'),
                 youtube_video_id=vid_id,

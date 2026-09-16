@@ -394,9 +394,53 @@
                                       </div>
                                   </div>
                                   <div class="mb-3">
-                                      <label class="form-label text-muted small fw-bold">Display Schedule on Student Dashboard</label>
-                                      <input type="datetime-local" name="publish_at" class="form-control bg-light" value="{{ c.publish_at|date:'Y-m-d\TH:i' }}">
-                                      <div class="form-text small text-muted">Set specific date and time when this class becomes visible to students. Leave empty for immediate display.</div>
+                                      <label class="form-label text-muted small fw-bold">Display Schedule (Date & Time)</label>
+                                      <div class="row g-2">
+                                          <div class="col-sm-6">
+                                              <label class="form-label text-muted" style="font-size: 0.75rem;">Release Date</label>
+                                              <input type="date" name="publish_date" class="form-control bg-light" value="{{ c.publish_at|date:'Y-m-d' }}">
+                                          </div>
+                                          <div class="col-sm-6">
+                                              <label class="form-label text-muted" style="font-size: 0.75rem;">Release Time (12-Hour)</label>
+                                              <div class="input-group">
+                                                  <select name="publish_hour" class="form-select bg-light text-center px-1">
+                                                      <option value="">Hour</option>
+                                                      <option value="01" {% if c.publish_at and c.publish_at|date:'h' == '01' %}selected{% endif %}>01</option>
+                                                      <option value="02" {% if c.publish_at and c.publish_at|date:'h' == '02' %}selected{% endif %}>02</option>
+                                                      <option value="03" {% if c.publish_at and c.publish_at|date:'h' == '03' %}selected{% endif %}>03</option>
+                                                      <option value="04" {% if c.publish_at and c.publish_at|date:'h' == '04' %}selected{% endif %}>04</option>
+                                                      <option value="05" {% if c.publish_at and c.publish_at|date:'h' == '05' %}selected{% endif %}>05</option>
+                                                      <option value="06" {% if c.publish_at and c.publish_at|date:'h' == '06' %}selected{% endif %}>06</option>
+                                                      <option value="07" {% if c.publish_at and c.publish_at|date:'h' == '07' %}selected{% endif %}>07</option>
+                                                      <option value="08" {% if c.publish_at and c.publish_at|date:'h' == '08' %}selected{% endif %}>08</option>
+                                                      <option value="09" {% if c.publish_at and c.publish_at|date:'h' == '09' %}selected{% endif %}>09</option>
+                                                      <option value="10" {% if c.publish_at and c.publish_at|date:'h' == '10' %}selected{% endif %}>10</option>
+                                                      <option value="11" {% if c.publish_at and c.publish_at|date:'h' == '11' %}selected{% endif %}>11</option>
+                                                      <option value="12" {% if c.publish_at and c.publish_at|date:'h' == '12' %}selected{% endif %}>12</option>
+                                                  </select>
+                                                  <span class="input-group-text bg-light text-muted px-1">:</span>
+                                                  <select name="publish_minute" class="form-select bg-light text-center px-1">
+                                                      <option value="00" {% if c.publish_at and c.publish_at|date:'i' == '00' %}selected{% endif %}>00</option>
+                                                      <option value="05" {% if c.publish_at and c.publish_at|date:'i' == '05' %}selected{% endif %}>05</option>
+                                                      <option value="10" {% if c.publish_at and c.publish_at|date:'i' == '10' %}selected{% endif %}>10</option>
+                                                      <option value="15" {% if c.publish_at and c.publish_at|date:'i' == '15' %}selected{% endif %}>15</option>
+                                                      <option value="20" {% if c.publish_at and c.publish_at|date:'i' == '20' %}selected{% endif %}>20</option>
+                                                      <option value="25" {% if c.publish_at and c.publish_at|date:'i' == '25' %}selected{% endif %}>25</option>
+                                                      <option value="30" {% if c.publish_at and c.publish_at|date:'i' == '30' %}selected{% endif %}>30</option>
+                                                      <option value="35" {% if c.publish_at and c.publish_at|date:'i' == '35' %}selected{% endif %}>35</option>
+                                                      <option value="40" {% if c.publish_at and c.publish_at|date:'i' == '40' %}selected{% endif %}>40</option>
+                                                      <option value="45" {% if c.publish_at and c.publish_at|date:'i' == '45' %}selected{% endif %}>45</option>
+                                                      <option value="50" {% if c.publish_at and c.publish_at|date:'i' == '50' %}selected{% endif %}>50</option>
+                                                      <option value="55" {% if c.publish_at and c.publish_at|date:'i' == '55' %}selected{% endif %}>55</option>
+                                                  </select>
+                                                  <select name="publish_ampm" class="form-select bg-light fw-bold text-primary px-1">
+                                                      <option value="AM" {% if c.publish_at and c.publish_at|date:'A' == 'AM' %}selected{% endif %}>AM</option>
+                                                      <option value="PM" {% if c.publish_at and c.publish_at|date:'A' == 'PM' %}selected{% endif %}>PM</option>
+                                                  </select>
+                                              </div>
+                                          </div>
+                                      </div>
+                                      <div class="form-text small text-muted">Set specific date and 12-hour AM/PM time. Leave date empty to display immediately.</div>
                                   </div>
                                   <div class="mb-4">
                                       <label class="form-label text-muted small fw-bold">Description (Optional)</label>
@@ -485,9 +529,53 @@
                 <div class="form-text small text-muted mt-1">E.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ</div>
             </div>
             <div class="mb-3">
-                <label class="form-label text-muted small fw-bold">Display Schedule on Student Dashboard</label>
-                <input type="datetime-local" name="publish_at" class="form-control bg-light">
-                <div class="form-text small text-muted">Set specific date and time when this class becomes visible to students. Leave empty for immediate display.</div>
+                <label class="form-label text-muted small fw-bold">Display Schedule (Date & Time)</label>
+                <div class="row g-2">
+                    <div class="col-sm-6">
+                        <label class="form-label text-muted" style="font-size: 0.75rem;">Release Date</label>
+                        <input type="date" name="publish_date" class="form-control bg-light">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label text-muted" style="font-size: 0.75rem;">Release Time (12-Hour)</label>
+                        <div class="input-group">
+                            <select name="publish_hour" class="form-select bg-light text-center px-1">
+                                <option value="">Hour</option>
+                                <option value="01">01</option>
+                                <option value="02">02</option>
+                                <option value="03">03</option>
+                                <option value="04">04</option>
+                                <option value="05">05</option>
+                                <option value="06">06</option>
+                                <option value="07">07</option>
+                                <option value="08">08</option>
+                                <option value="09">09</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                            </select>
+                            <span class="input-group-text bg-light text-muted px-1">:</span>
+                            <select name="publish_minute" class="form-select bg-light text-center px-1">
+                                <option value="00">00</option>
+                                <option value="05">05</option>
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                                <option value="20">20</option>
+                                <option value="25">25</option>
+                                <option value="30">30</option>
+                                <option value="35">35</option>
+                                <option value="40">40</option>
+                                <option value="45">45</option>
+                                <option value="50">50</option>
+                                <option value="55">55</option>
+                            </select>
+                            <select name="publish_ampm" class="form-select bg-light fw-bold text-primary px-1">
+                                <option value="AM" selected>AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-text small text-muted">Set specific date and 12-hour AM/PM time. Leave date empty to display immediately.</div>
             </div>
             <div class="mb-4">
                 <label class="form-label text-muted small fw-bold">Description (Optional)</label>

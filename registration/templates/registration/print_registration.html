@@ -165,8 +165,8 @@
             </div>
             {% if reg.is_paid %}
                 <div class="detail-row">
-                    <div class="detail-label">Transaction Date (തീയതി)</div>
-                    <div class="detail-value">{{ reg.transaction_time_and_date|date:"d-m-Y H:i" }}</div>
+                    <div class="detail-label">Transaction Date & Time (തീയതിയും സമയവും)</div>
+                    <div class="detail-value">{{ reg.transaction_time_and_date|date:"d-m-Y h:i A" }}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Transaction ID (ഐഡി)</div>

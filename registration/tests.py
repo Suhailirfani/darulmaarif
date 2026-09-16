@@ -201,7 +201,7 @@ class RegistrationEditTestCase(TestCase):
         self.assertContains(response, 'Class 1 Immediate')
         self.assertContains(response, 'Class 2 Scheduled')
 
-        # Admin edits class 2 to release now (past date)
+        # Admin edits class 2 using 12-hour AM/PM fields to release in the past
         past_time = timezone.now() - timedelta(hours=1)
         self.client.post(reverse('admin_manage_class'), {
             'action': 'edit',
@@ -209,7 +209,10 @@ class RegistrationEditTestCase(TestCase):
             'title': 'Class 2 Scheduled',
             'order': 2,
             'youtube_video_id': 'vid2',
-            'publish_at': past_time.strftime('%Y-%m-%dT%H:%M'),
+            'publish_date': past_time.strftime('%Y-%m-%d'),
+            'publish_hour': past_time.strftime('%I'),
+            'publish_minute': past_time.strftime('%M'),
+            'publish_ampm': past_time.strftime('%p'),
         })
 
         # Student logs in again -> now Class 2 is visible

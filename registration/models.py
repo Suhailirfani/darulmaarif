@@ -105,14 +105,18 @@ def create_student_user(sender, instance, created, **kwargs):
                 updated = True
             if user.username != instance.mobile:
                 # Only update username if target mobile isn't taken by another user
-                if not User.objects.filter(username=instance.mobile).exclude(pk=user.pk).exists():
-                    user.username = instance.mobile
-                    updated = True
+                conflicting_user = User.objects.filter(username=instance.mobile).exclude(pk=user.pk).first()
+                if conflicting_user:
+                    # Clear out conflicting user/profile if it's an orphaned duplicate
+                    UserProfile.objects.filter(user=conflicting_user).exclude(pk=profile.pk).delete()
+                    conflicting_user.delete()
+                user.username = instance.mobile
+                updated = True
             if updated:
                 user.save()
             return
 
-        # If no profile exists yet, check if User with username=instance.mobile exists
+        # If no profile exists yet for this registration, check if User with username=instance.mobile exists
         user = User.objects.filter(username=instance.mobile).first()
         if not user:
             user = User.objects.create_user(
@@ -125,6 +129,9 @@ def create_student_user(sender, instance, created, **kwargs):
                 user.first_name = instance.name
                 user.save()
         
+        # Ensure no other profile holds this registration (1-to-1 constraint)
+        UserProfile.objects.filter(registration=instance).exclude(user=user).update(registration=None)
+
         # Link user and profile
         profile = UserProfile.objects.filter(user=user).first()
         if not profile:
@@ -133,9 +140,10 @@ def create_student_user(sender, instance, created, **kwargs):
                 role='STUDENT',
                 registration=instance
             )
-        elif not profile.registration:
-            profile.registration = instance
-            profile.save()
+        else:
+            if profile.registration != instance:
+                profile.registration = instance
+                profile.save()
 
 class AppSetting(models.Model):
     key = models.CharField(max_length=50, unique=True)

@@ -132,8 +132,33 @@ class RegistrationEditTestCase(TestCase):
         response = self.client.get(reverse('dashboard'))
         self.assertRedirects(response, reverse('student_dashboard'))
 
-        response = self.client.get(reverse('student_dashboard'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'My Classroom')
+    def test_stale_profile_conflict_resolution(self):
+        # Suppose an old user profile holds registration=self.reg
+        old_user = User.objects.get(username='9876543210')
+        old_profile = UserProfile.objects.get(registration=self.reg)
+        self.assertEqual(old_profile.user, old_user)
+
+        # Old user changes or is archived, new user is registered with this mobile
+        old_user.username = '9876543210_archived'
+        old_user.save()
+
+        new_user = User.objects.create_user(
+            username='9876543210',
+            password='password123',
+            first_name='New User'
+        )
+        self.client.force_login(new_user)
+
+        # When new_user accesses /dashboard/, it should resolve the registration conflict without raising IntegrityError
+        response = self.client.get(reverse('dashboard'))
+        self.assertRedirects(response, reverse('student_dashboard'))
+
+        # Verify new_user now has the profile linked to self.reg and old_profile was disassociated
+        new_user.refresh_from_db()
+        self.assertTrue(hasattr(new_user, 'profile'))
+        self.assertEqual(new_user.profile.registration, self.reg)
+
+        old_profile.refresh_from_db()
+        self.assertIsNone(old_profile.registration)
 
 

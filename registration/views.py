@@ -103,7 +103,7 @@ def register_success(request, pk):
 def get_or_create_user_profile(user):
     """
     Safely retrieves the UserProfile for the given user, or creates one if missing.
-    Links the profile to matching Registration if available.
+    Links the profile to matching Registration if available, resolving any 1-to-1 conflicts.
     """
     if not user.is_authenticated:
         return None
@@ -112,15 +112,22 @@ def get_or_create_user_profile(user):
     except (UserProfile.DoesNotExist, AttributeError):
         if user.is_superuser:
             profile, _ = UserProfile.objects.get_or_create(user=user, defaults={'role': 'ADMIN'})
+            return profile
         else:
-            reg = Registration.objects.filter(mobile=user.username).first()
             profile, _ = UserProfile.objects.get_or_create(
                 user=user,
-                defaults={'role': 'STUDENT', 'registration': reg}
+                defaults={'role': 'STUDENT'}
             )
-            if reg and not profile.registration:
-                profile.registration = reg
-                profile.save()
+
+    # If this is a student profile, ensure it is linked to the matching Registration (if any)
+    if profile and profile.role == 'STUDENT' and not profile.registration:
+        reg = Registration.objects.filter(mobile=user.username).first()
+        if reg:
+            # Check if another UserProfile currently holds this registration
+            UserProfile.objects.filter(registration=reg).exclude(pk=profile.pk).update(registration=None)
+            profile.registration = reg
+            profile.save()
+
     return profile
 
 @login_required

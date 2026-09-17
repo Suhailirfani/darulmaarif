@@ -100,6 +100,11 @@
                             <a class="nav-link" href="{% url 'login' %}?next={% url 'dashboard' %}">Login</a>
                         </li>
                     {% endif %}
+                    <li class="nav-item ms-lg-2 pwa-install-nav-item">
+                        <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3 my-1 my-lg-0 shadow-sm pwa-install-btn d-inline-flex align-items-center">
+                            <i class="bi bi-download me-1"></i> Install App
+                        </button>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -119,6 +124,52 @@
         {% block content %}{% endblock %}
     </div>
 
+    <!-- PWA Install Guide Modal (Fallback for iOS & Non-prompting browsers) -->
+    <div class="modal fade" id="pwaInstallModal" tabindex="-1" aria-labelledby="pwaInstallModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #4d0b5a, #b10f54); color: white; border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                    <div class="d-flex align-items-center gap-2 py-2">
+                        <i class="bi bi-phone fs-3"></i>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="pwaInstallModalLabel">Install App (ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യാം)</h5>
+                            <small class="opacity-75">അൽ മർഅ ഓൺലൈൻ ദർസ്</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- iOS Instructions -->
+                    <div class="card bg-light border-0 rounded-3 p-3 mb-3">
+                        <h6 class="fw-bold text-dark d-flex align-items-center mb-2">
+                            <i class="bi bi-apple fs-5 me-2 text-dark"></i> iPhone / iPad (Safari)
+                        </h6>
+                        <ol class="small text-muted mb-0 ps-3" style="line-height: 1.6;">
+                            <li>Safari ബ്രൗസറിൽ താഴെയുള്ള <strong>Share</strong> ബട്ടൺ (<i class="bi bi-box-arrow-up text-primary"></i>) ക്ലിക്ക് ചെയ്യുക.</li>
+                            <li>തുടർന്ന് താഴേക്ക് സ്ക്രോൾ ചെയ്ത് <strong>'Add to Home Screen'</strong> (<i class="bi bi-plus-square text-primary"></i>) തിരഞ്ഞെടുക്കുക.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Android / Chrome Instructions -->
+                    <div class="card bg-light border-0 rounded-3 p-3 mb-0">
+                        <h6 class="fw-bold text-dark d-flex align-items-center mb-2">
+                            <i class="bi bi-android2 fs-5 me-2 text-success"></i> Android / Chrome
+                        </h6>
+                        <ol class="small text-muted mb-0 ps-3" style="line-height: 1.6;">
+                            <li>മുകളിൽ വലതുവശത്തുള്ള മൂന്ന് കുത്തുകൾ (<strong>⋮</strong>) ക്ലിക്ക് ചെയ്യുക.</li>
+                            <li><strong>'Install app'</strong> അല്ലെങ്കിൽ <strong>'Add to Home screen'</strong> തിരഞ്ഞെടുക്കുക.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary rounded-pill px-4 w-100" data-bs-dismiss="modal">
+                        ശരി, മനസ്സിലായി (Got It)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer class="text-center py-5 mt-5" style="background-color: #f1f1f1; border-top: 1px solid #e0e0e0;">
         <div class="container">
             <h6 class="fw-bold mb-2" style="color: #4d0b5a; letter-spacing: 1px;">DARUL MA'ARIF PUBLICATION TRUST</h6>
@@ -130,6 +181,82 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // PWA Installation & Service Worker Handler
+        let deferredPrompt = null;
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => {
+                    console.log('SW registration error:', err);
+                });
+            });
+        }
+
+        // Check standalone / already installed mode
+        function isAppInstalled() {
+            return window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone === true || 
+                   document.referrer.includes('android-app://');
+        }
+
+        function updateInstallButtonsVisibility() {
+            if (isAppInstalled()) {
+                document.querySelectorAll('.pwa-install-btn, .pwa-install-nav-item, #installAppBtn').forEach(el => {
+                    el.classList.add('d-none');
+                });
+            } else {
+                document.querySelectorAll('.pwa-install-btn, .pwa-install-nav-item, #installAppBtn').forEach(el => {
+                    el.classList.remove('d-none');
+                });
+            }
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            updateInstallButtonsVisibility();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredPrompt = null;
+            document.querySelectorAll('.pwa-install-btn, .pwa-install-nav-item, #installAppBtn').forEach(el => {
+                el.classList.add('d-none');
+            });
+        });
+
+        // Universal install click handler
+        async function handlePwaInstall() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.querySelectorAll('.pwa-install-btn, .pwa-install-nav-item, #installAppBtn').forEach(el => {
+                        el.classList.add('d-none');
+                    });
+                }
+                deferredPrompt = null;
+            } else {
+                // Show modal guide for iOS / browsers without direct prompt
+                const modalEl = document.getElementById('pwaInstallModal');
+                if (modalEl && window.bootstrap) {
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateInstallButtonsVisibility();
+            document.querySelectorAll('.pwa-install-btn, #installAppBtn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    handlePwaInstall();
+                });
+            });
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

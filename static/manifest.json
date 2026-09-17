@@ -2,9 +2,10 @@
   "name": "Al Mara Online Dars",
   "short_name": "Online Dars",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#b10f54",
+  "theme_color": "#4d0b5a",
   "icons": [
     {
       "src": "/static/img/favicon.png",
@@ -18,3 +19,4 @@
     }
   ]
 }
+

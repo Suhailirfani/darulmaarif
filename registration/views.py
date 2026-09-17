@@ -390,7 +390,25 @@ def admin_verify_payment_view(request):
     return redirect_to_referer_or_dashboard(request)
 
 def service_worker_view(request):
-    return HttpResponse("// Service worker placeholder", content_type='application/javascript')
+    sw_code = """
+const CACHE_NAME = 'al-mara-cache-v1';
+
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        fetch(event.request).catch(() => caches.match(event.request))
+    );
+});
+"""
+    return HttpResponse(sw_code.strip(), content_type='application/javascript')
+
 
 @login_required
 def admin_edit_registration_view(request):

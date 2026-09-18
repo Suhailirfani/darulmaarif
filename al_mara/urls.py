@@ -18,9 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.cache import never_cache
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/login/', never_cache(ensure_csrf_cookie(auth_views.LoginView.as_view(template_name='registration/login.html'))), name='login'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('', include('registration.urls')),
 ]

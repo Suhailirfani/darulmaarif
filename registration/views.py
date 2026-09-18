@@ -6,6 +6,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth import update_session_auth_hash
 from .models import Registration, CourseClass, StudentProgress, UserProfile, AppSetting
 from .forms import RegistrationForm, PaymentCompletionForm
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.cache import never_cache
+from django.conf import settings
 import csv
 from datetime import datetime
 from django.utils import timezone
@@ -23,6 +26,8 @@ def landing_view(request):
     is_locked = reg_setting.value_bool
     return render(request, 'registration/landing.html', {'is_locked': is_locked})
 
+@never_cache
+@ensure_csrf_cookie
 def register_view(request):
     is_locked = AppSetting.objects.filter(key='registration_locked', value_bool=True).exists()
     if is_locked:
@@ -54,6 +59,8 @@ def register_view(request):
         form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form})
 
+@never_cache
+@ensure_csrf_cookie
 def complete_payment_view(request):
     is_locked = AppSetting.objects.filter(key='registration_locked', value_bool=True).exists()
     if is_locked:
@@ -391,23 +398,43 @@ def admin_verify_payment_view(request):
 
 def service_worker_view(request):
     sw_code = """
-const CACHE_NAME = 'al-mara-cache-v1';
+const CACHE_NAME = 'al-mara-cache-v2';
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(self.clients.claim());
+    event.waitUntil(
+        caches.keys().then((keys) => {
+            return Promise.all(
+                keys.map((key) => {
+                    if (key !== CACHE_NAME) {
+                        return caches.delete(key);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
 });
 
 self.addEventListener('fetch', (event) => {
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
+    const url = new URL(event.request.url);
+    if (url.pathname.startsWith('/accounts/') || url.pathname.startsWith('/admin/') || url.pathname.startsWith('/dashboard/')) {
+        return;
+    }
+
     event.respondWith(
         fetch(event.request).catch(() => caches.match(event.request))
     );
 });
 """
     return HttpResponse(sw_code.strip(), content_type='application/javascript')
+
 
 
 @login_required
@@ -582,6 +609,8 @@ def mentor_dashboard_view(request):
     return render(request, 'registration/mentor_dashboard.html', {'student_data': student_data})
 
 
+@never_cache
+@ensure_csrf_cookie
 def edit_my_registration_view(request):
     action = request.GET.get('action')
     if action == 'clear':
@@ -733,4 +762,12 @@ def user_profile_edit_view(request):
         'profile': profile,
         'reg': reg,
     })
+
+
+def csrf_failure_view(request, reason=""):
+    return render(request, 'registration/csrf_failure.html', {
+        'reason': reason,
+        'debug': getattr(settings, 'DEBUG', False),
+    }, status=403)
+
 

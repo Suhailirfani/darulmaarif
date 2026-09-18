@@ -286,5 +286,12 @@ class RegistrationEditTestCase(TestCase):
         self.assertEqual(self.admin_user.first_name, 'Super Admin Updated')
         self.assertTrue(self.admin_user.check_password('newadminpass123'))
 
-
-
+    def test_csrf_failure_view(self):
+        from registration.views import csrf_failure_view
+        from django.test import RequestFactory
+        factory = RequestFactory()
+        request = factory.post('/accounts/login/')
+        response = csrf_failure_view(request, reason="CSRF token missing.")
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, "സുരക്ഷാ പരിശോധന പരാജയപ്പെട്ടു", status_code=403)
+        self.assertContains(response, "ലോഗിൻ വീണ്ടും ശ്രമിക്കുക", status_code=403)

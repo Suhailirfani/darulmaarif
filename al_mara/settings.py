@@ -27,6 +27,19 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.pythonanywhere.com',
+    'https://*.ngrok-free.app',
+    'http://127.0.0.1',
+    'http://localhost',
+]
+
+CSRF_FAILURE_VIEW = 'registration.views.csrf_failure_view'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_AGE = 31449600  # 1 year token validity
+
 
 # Application definition
 

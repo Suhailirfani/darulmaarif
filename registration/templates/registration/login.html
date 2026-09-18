@@ -21,23 +21,103 @@
                     <strong>Students:</strong> Use your <strong>Mobile Number</strong> as Username and your <strong>Application No</strong> (e.g. APP-001) as Password.
                 </div>
 
-                <form method="post" action="{% url 'login' %}">
+                <form method="post" action="{% url 'login' %}" id="loginForm">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label class="form-label fw-bold text-muted small text-uppercase">Username / Mobile No</label>
-                        <input type="text" name="username" class="form-control form-control-lg bg-light border-0" required autofocus>
+                        <input type="text" name="username" id="id_username" class="form-control form-control-lg bg-light border-0" required autofocus>
                     </div>
                     <div class="mb-4">
                         <label class="form-label fw-bold text-muted small text-uppercase">Password</label>
-                        <input type="password" name="password" class="form-control form-control-lg bg-light border-0" required>
+                        <input type="password" name="password" id="id_password" class="form-control form-control-lg bg-light border-0" required>
                     </div>
                     <input type="hidden" name="next" value="{{ next }}">
                     <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm" style="background: linear-gradient(135deg, #4d0b5a, #b10f54); border: none;">Secure Login</button>
+                        <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-lg rounded-pill shadow-sm" style="background: linear-gradient(135deg, #4d0b5a, #b10f54); border: none;">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Loading Modal to Prevent Double Clicks -->
+<div class="modal fade" id="loginLoadingModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="loginLoadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg text-center p-4 rounded-4" style="background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(8px);">
+            <div class="modal-body p-0 d-flex flex-column align-items-center justify-content-center">
+                <div class="spinner-border text-primary mb-3" style="width: 3.2rem; height: 3.2rem; color: #b10f54 !important;" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 class="fw-bold text-dark mb-1" id="loginLoadingModalLabel">ലോഗിൻ ചെയ്യുന്നു...</h5>
+                <p class="text-muted small mb-0">Signing in, please wait...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+    const loadingModalEl = document.getElementById('loginLoadingModal');
+    
+    if (loginForm && loadingModalEl) {
+        let isSubmitting = false;
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        loginForm.addEventListener('submit', function(e) {
+            if (isSubmitting) {
+                e.preventDefault();
+                return;
+            }
+
+            if (!loginForm.checkValidity()) {
+                return;
+            }
+
+            // Sync hidden CSRF token from current cookie if available
+            const cookieToken = getCookie('csrftoken');
+            if (cookieToken) {
+                const csrfInput = loginForm.querySelector('input[name="csrfmiddlewaretoken"]');
+                if (csrfInput) {
+                    csrfInput.value = cookieToken;
+                }
+            }
+
+            isSubmitting = true;
+
+            // Show loading modal
+            if (window.bootstrap && bootstrap.Modal) {
+                const loadingModal = bootstrap.Modal.getOrCreateInstance(loadingModalEl);
+                loadingModal.show();
+            }
+
+            // Disable submit button & update text to prevent double submission
+            if (loginSubmitBtn) {
+                loginSubmitBtn.disabled = true;
+                loginSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>ലോഗിൻ ചെയ്യുന്നു...';
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -350,26 +350,29 @@
 
     <!-- Attendance Matrix Table Card -->
     <div class="card attendance-table-card shadow-sm">
-        <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="card-header border-0 py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2 text-white" style="background: linear-gradient(135deg, #4d0b5a, #6c127d); border-top-left-radius: 18px; border-top-right-radius: 18px;">
             <div>
-                <h5 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>ഹാജർ പട്ടിക (Live Class Attendance)
+                <h5 class="fw-bold mb-1 text-white d-flex align-items-center">
+                    <i class="bi bi-grid-3x3-gap-fill text-warning me-2 fs-5"></i>
+                    <span>ഹാജർ പട്ടിക (Live Class Attendance)</span>
                 </h5>
-                <span class="text-muted small">
-                    Showing <strong>Last {{ recent_classes|length }} Live Classes</strong> in table • Click <strong>Total Attended</strong> to view full student sheet
-                </span>
+                <div class="d-inline-flex align-items-center flex-wrap gap-1 text-white-50 small mt-1" style="font-size: 0.88rem;">
+                    <span class="badge bg-white bg-opacity-25 text-white fw-semibold px-2 py-1">
+                        <i class="bi bi-broadcast me-1 text-warning"></i>Showing Last {{ recent_classes|length }} Live Classes
+                    </span>
+                    <span class="text-white opacity-75 mx-1">•</span>
+                    <span class="text-white opacity-90">
+                        Click <strong class="text-warning text-decoration-underline">Total Attended</strong> button to view full student sheet
+                    </span>
+                </div>
             </div>
-            <!-- Quick Legend -->
-            <div class="d-flex align-items-center gap-3 small">
-                <span class="d-inline-flex align-items-center">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-circle p-1 me-1">
-                        <i class="bi bi-check-lg fw-bold"></i>
-                    </span> Attended
+            <!-- Quick Legend with Clear Badges -->
+            <div class="d-flex align-items-center gap-2 small">
+                <span class="badge bg-success text-white px-2 py-1 shadow-xs d-inline-flex align-items-center">
+                    <i class="bi bi-check-lg fw-bold me-1"></i> Attended
                 </span>
-                <span class="d-inline-flex align-items-center">
-                    <span class="badge bg-light text-secondary border rounded-circle p-1 me-1">
-                        <i class="bi bi-dash fw-bold"></i>
-                    </span> Pending
+                <span class="badge bg-white text-dark px-2 py-1 shadow-xs d-inline-flex align-items-center">
+                    <i class="bi bi-dash fw-bold me-1 text-muted"></i> Pending
                 </span>
             </div>
         </div>

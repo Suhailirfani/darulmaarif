@@ -8,6 +8,9 @@
     <h2 class="mb-2 text-center" style="color: #4d0b5a;">Mentor Dashboard</h2>
     <p class="text-center text-muted mb-2">Track the progress of your assigned students.</p>
     <div class="text-center mb-4 d-flex justify-content-center align-items-center flex-wrap gap-2">
+        <a href="{% url 'attendance_list' %}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-xs">
+            <i class="bi bi-clipboard-check-fill me-1"></i> Class Attendance Sheet (ഹാജർ പട്ടിക)
+        </a>
         <a href="{% url 'user_profile_edit' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-xs">
             <i class="bi bi-person-gear me-1"></i> Edit Profile (പ്രൊഫൈൽ)
         </a>

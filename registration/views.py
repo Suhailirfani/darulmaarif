@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -769,5 +769,362 @@ def csrf_failure_view(request, reason=""):
         'reason': reason,
         'debug': getattr(settings, 'DEBUG', False),
     }, status=403)
+
+
+@login_required
+def attendance_list_view(request):
+    profile = get_or_create_user_profile(request.user)
+    is_admin = request.user.is_superuser or (profile and profile.role == 'ADMIN')
+    is_mentor = profile and profile.role == 'MENTOR'
+
+    if not is_admin and not is_mentor:
+        return redirect('student_dashboard')
+
+    classes = CourseClass.objects.all().order_by('order')
+    total_classes = classes.count()
+
+    mentor_filter = request.GET.get('mentor', '').strip()
+    search_query = request.GET.get('search', '').strip()
+    status_filter = request.GET.get('status', '').strip()
+
+    regs_query = Registration.objects.filter(is_paid=True).select_related(
+        'student_profile__mentor__user', 
+        'student_profile__user'
+    ).order_by('application_num')
+
+    if is_mentor and not is_admin:
+        regs_query = regs_query.filter(student_profile__mentor=profile)
+    elif mentor_filter:
+        if mentor_filter == 'unassigned':
+            regs_query = regs_query.filter(student_profile__mentor__isnull=True)
+        else:
+            try:
+                regs_query = regs_query.filter(student_profile__mentor_id=int(mentor_filter))
+            except ValueError:
+                pass
+
+    if search_query:
+        clean_app_num = search_query.upper().replace('APP-', '').strip()
+        q_obj = (
+            Q(name__icontains=search_query) |
+            Q(mobile__icontains=search_query) |
+            Q(whatsapp__icontains=search_query) |
+            Q(place__icontains=search_query) |
+            Q(district__icontains=search_query)
+        )
+        if clean_app_num.isdigit():
+            q_obj |= Q(application_num=int(clean_app_num))
+        regs_query = regs_query.filter(q_obj)
+
+    # Build user map and progress map
+    student_users_map = {}
+    for reg in regs_query:
+        user = None
+        if hasattr(reg, 'student_profile') and reg.student_profile and reg.student_profile.user:
+            user = reg.student_profile.user
+        else:
+            user = User.objects.filter(username=reg.mobile).first()
+            if not user and reg.is_paid:
+                user = User.objects.create_user(
+                    username=reg.mobile,
+                    password=f"APP-{reg.application_number}",
+                    first_name=reg.name
+                )
+            if user:
+                reg_profile = get_or_create_user_profile(user)
+                if reg_profile and reg_profile.registration != reg:
+                    reg_profile.registration = reg
+                    reg_profile.save()
+        if user:
+            student_users_map[reg.id] = user
+
+    user_ids = [u.id for u in student_users_map.values() if u]
+    progress_qs = StudentProgress.objects.filter(
+        student_id__in=user_ids, 
+        is_completed=True
+    ).values('student_id', 'course_class_id', 'completed_at')
+
+    progress_map = {}
+    for p in progress_qs:
+        progress_map[(p['student_id'], p['course_class_id'])] = p['completed_at']
+
+    students_attendance_data = []
+    total_attended_all_students = 0
+    full_completed_count = 0
+    zero_attended_count = 0
+
+    for reg in regs_query:
+        user = student_users_map.get(reg.id)
+        user_id = user.id if user else None
+
+        classes_status = []
+        attended_count = 0
+
+        for c in classes:
+            completed_at = progress_map.get((user_id, c.id)) if user_id else None
+            is_attended = completed_at is not None
+            if is_attended:
+                attended_count += 1
+            classes_status.append({
+                'class_id': c.id,
+                'order': c.order,
+                'title': c.title,
+                'is_attended': is_attended,
+                'completed_at': completed_at,
+            })
+
+        percentage = round((attended_count / total_classes * 100), 1) if total_classes > 0 else 0
+        if attended_count == total_classes and total_classes > 0:
+            full_completed_count += 1
+        elif attended_count == 0:
+            zero_attended_count += 1
+
+        total_attended_all_students += attended_count
+
+        mentor_name = "-"
+        mentor_id = None
+        if hasattr(reg, 'student_profile') and reg.student_profile and reg.student_profile.mentor:
+            mentor_profile = reg.student_profile.mentor
+            mentor_id = mentor_profile.id
+            mentor_user = mentor_profile.user
+            mentor_name = mentor_user.first_name or mentor_user.username
+
+        # Filter by status
+        if status_filter == 'completed' and (attended_count != total_classes or total_classes == 0):
+            continue
+        elif status_filter == 'in_progress' and (attended_count == 0 or attended_count == total_classes):
+            continue
+        elif status_filter == 'not_started' and attended_count > 0:
+            continue
+
+        students_attendance_data.append({
+            'registration': reg,
+            'app_number': f"APP-{reg.application_number}",
+            'name': reg.name,
+            'mobile': reg.mobile,
+            'whatsapp': reg.whatsapp,
+            'place': reg.place,
+            'district': reg.district,
+            'mentor_id': mentor_id,
+            'mentor_name': mentor_name,
+            'user_id': user_id,
+            'classes_status': classes_status,
+            'attended_count': attended_count,
+            'total_classes': total_classes,
+            'percentage': percentage,
+        })
+
+    total_students_count = len(students_attendance_data)
+    avg_attendance_rate = round((total_attended_all_students / (total_students_count * total_classes) * 100), 1) if (total_students_count > 0 and total_classes > 0) else 0
+
+    mentors = UserProfile.objects.filter(role='MENTOR').select_related('user').order_by('user__first_name')
+
+    context = {
+        'classes': classes,
+        'students_data': students_attendance_data,
+        'total_classes': total_classes,
+        'total_students_count': total_students_count,
+        'full_completed_count': full_completed_count,
+        'zero_attended_count': zero_attended_count,
+        'avg_attendance_rate': avg_attendance_rate,
+        'mentors': mentors,
+        'selected_mentor': mentor_filter,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'is_admin': is_admin,
+        'is_mentor': is_mentor,
+    }
+    return render(request, 'registration/attendance_list.html', context)
+
+
+@login_required
+def admin_toggle_student_attendance_view(request):
+    profile = get_or_create_user_profile(request.user)
+    is_admin = request.user.is_superuser or (profile and profile.role == 'ADMIN')
+    is_mentor = profile and profile.role == 'MENTOR'
+
+    if not is_admin and not is_mentor:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        reg_id = request.POST.get('reg_id')
+        class_id = request.POST.get('class_id')
+
+        course_class = get_object_or_404(CourseClass, id=class_id)
+
+        user = None
+        if user_id:
+            user = get_object_or_404(User, id=user_id)
+        elif reg_id:
+            reg = get_object_or_404(Registration, id=reg_id)
+            user = User.objects.filter(username=reg.mobile).first()
+            if not user:
+                user = User.objects.create_user(
+                    username=reg.mobile, 
+                    password=f"APP-{reg.application_number}", 
+                    first_name=reg.name
+                )
+                UserProfile.objects.get_or_create(user=user, defaults={'role': 'STUDENT', 'registration': reg})
+
+        if not user:
+            return JsonResponse({'error': 'User not found'}, status=404)
+
+        # If mentor, check assignment
+        if is_mentor and not is_admin:
+            student_profile = getattr(user, 'profile', None)
+            if not student_profile or student_profile.mentor != profile:
+                return JsonResponse({'error': 'Permission denied: Student not assigned to you'}, status=403)
+
+        progress = StudentProgress.objects.filter(student=user, course_class=course_class).first()
+        if progress and progress.is_completed:
+            progress.is_completed = False
+            progress.save()
+            new_state = False
+            completed_str = None
+        else:
+            if not progress:
+                progress = StudentProgress(student=user, course_class=course_class, is_completed=True)
+            else:
+                progress.is_completed = True
+            progress.save()
+            new_state = True
+            completed_str = timezone.localtime(progress.completed_at).strftime("%b %d, %Y %I:%M %p")
+
+        total_classes = CourseClass.objects.count()
+        attended_count = StudentProgress.objects.filter(student=user, is_completed=True).count()
+        percentage = round((attended_count / total_classes * 100), 1) if total_classes > 0 else 0
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == '1':
+            return JsonResponse({
+                'success': True,
+                'is_attended': new_state,
+                'completed_at_str': completed_str,
+                'attended_count': attended_count,
+                'total_classes': total_classes,
+                'percentage': percentage,
+            })
+
+        messages.success(request, f"Attendance updated for {user.first_name or user.username} - Class {course_class.order}.")
+        return redirect_to_referer_or_dashboard(request)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@login_required
+def export_attendance_excel_view(request):
+    import openpyxl
+    import openpyxl.styles
+    import openpyxl.utils
+
+    profile = get_or_create_user_profile(request.user)
+    is_admin = request.user.is_superuser or (profile and profile.role == 'ADMIN')
+    is_mentor = profile and profile.role == 'MENTOR'
+
+    if not is_admin and not is_mentor:
+        return redirect('student_dashboard')
+
+    classes = CourseClass.objects.all().order_by('order')
+    total_classes = classes.count()
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename=attendance_list_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+
+    workbook = openpyxl.Workbook()
+    worksheet = workbook.active
+    worksheet.title = 'Attendance List'
+
+    columns = ['App No', 'Student Name', 'Mobile', 'WhatsApp', 'District', 'Mentor']
+    for c in classes:
+        columns.append(f"Class {c.order}")
+    columns.extend(['Total Attended', 'Total Classes', 'Attendance %'])
+
+    header_fill = openpyxl.styles.PatternFill(start_color="4D0B5A", end_color="4D0B5A", fill_type="solid")
+    header_font = openpyxl.styles.Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    align_center = openpyxl.styles.Alignment(horizontal="center", vertical="center")
+    align_left = openpyxl.styles.Alignment(horizontal="left", vertical="center")
+
+    for col_num, col_title in enumerate(columns, 1):
+        cell = worksheet.cell(row=1, column=col_num)
+        cell.value = col_title
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = align_center
+
+    regs_query = Registration.objects.filter(is_paid=True).select_related(
+        'student_profile__mentor__user', 
+        'student_profile__user'
+    ).order_by('application_num')
+
+    if is_mentor and not is_admin:
+        regs_query = regs_query.filter(student_profile__mentor=profile)
+
+    user_ids = []
+    user_map = {}
+    for reg in regs_query:
+        user = None
+        if hasattr(reg, 'student_profile') and reg.student_profile and reg.student_profile.user:
+            user = reg.student_profile.user
+        else:
+            user = User.objects.filter(username=reg.mobile).first()
+        if user:
+            user_map[reg.id] = user
+            user_ids.append(user.id)
+
+    progress_qs = StudentProgress.objects.filter(
+        student_id__in=user_ids, 
+        is_completed=True
+    ).values('student_id', 'course_class_id', 'completed_at')
+    
+    progress_map = {(p['student_id'], p['course_class_id']): p['completed_at'] for p in progress_qs}
+
+    row_num = 1
+    for reg in regs_query:
+        row_num += 1
+        user = user_map.get(reg.id)
+        user_id = user.id if user else None
+
+        mentor_name = "-"
+        if hasattr(reg, 'student_profile') and reg.student_profile and reg.student_profile.mentor:
+            mentor_user = reg.student_profile.mentor.user
+            mentor_name = mentor_user.first_name or mentor_user.username
+
+        row_data = [
+            f"APP-{reg.application_number}",
+            reg.name,
+            reg.mobile,
+            reg.whatsapp,
+            reg.district,
+            mentor_name,
+        ]
+
+        attended_count = 0
+        for c in classes:
+            completed_at = progress_map.get((user_id, c.id)) if user_id else None
+            if completed_at:
+                attended_count += 1
+                row_data.append("Attended")
+            else:
+                row_data.append("-")
+
+        percentage = f"{round((attended_count / total_classes * 100), 1)}%" if total_classes > 0 else "0%"
+        row_data.extend([attended_count, total_classes, percentage])
+
+        for col_num, val in enumerate(row_data, 1):
+            cell = worksheet.cell(row=row_num, column=col_num)
+            cell.value = val
+            if col_num in [1, 3, 4, 6] or col_num > 6:
+                cell.alignment = align_center
+            else:
+                cell.alignment = align_left
+
+    for col in worksheet.columns:
+        max_len = max(len(str(cell.value or '')) for cell in col)
+        col_letter = openpyxl.utils.get_column_letter(col[0].column)
+        worksheet.column_dimensions[col_letter].width = max(max_len + 3, 10)
+
+    workbook.save(response)
+    return response
+
 
 

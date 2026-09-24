@@ -81,6 +81,13 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
                         </li>
+                        {% if user.is_superuser or user.profile.role == 'ADMIN' or user.profile.role == 'MENTOR' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'attendance_list' %}">
+                                <i class="bi bi-clipboard-check me-1"></i>Attendance
+                            </a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'user_profile_edit' %}" title="Edit Profile">
                                 <i class="bi bi-person-circle me-1"></i>Profile

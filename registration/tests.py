@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from registration.models import Registration, UserProfile
+from registration.models import Registration, UserProfile, CourseClass, StudentProgress
 
 class RegistrationEditTestCase(TestCase):
     def setUp(self):

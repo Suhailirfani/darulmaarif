@@ -407,7 +407,7 @@
                     </thead>
                     <tbody>
                         {% for student in students_data %}
-                        <tr id="student-row-{{ student.registration.id }}" class="student-item-row"
+                        <tr id="student-row-{{ student.reg_id }}" class="student-item-row"
                             data-app-no="{{ student.app_number|lower }}"
                             data-name="{{ student.name|lower }}"
                             data-mobile="{{ student.mobile|lower }}"
@@ -454,8 +454,8 @@
                             <td class="text-center p-1">
                                 <button type="button" 
                                         class="btn-att-toggle {% if c_stat.is_attended %}attended{% else %}pending{% endif %}"
-                                        id="att-btn-{{ student.registration.id }}-{{ c_stat.class_id }}"
-                                        data-reg-id="{{ student.registration.id }}"
+                                        id="att-btn-{{ student.reg_id }}-{{ c_stat.class_id }}"
+                                        data-reg-id="{{ student.reg_id }}"
                                         data-user-id="{{ student.user_id|default:'' }}"
                                         data-class-id="{{ c_stat.class_id }}"
                                         data-class-order="{{ c_stat.order }}"
@@ -472,8 +472,8 @@
                             <td class="text-center">
                                 <button type="button" 
                                         class="btn btn-sm btn-attended-total rounded-pill px-3 py-1 fw-bold {% if student.attended_count == student.total_classes and student.total_classes > 0 %}btn-success text-white{% elif student.attended_count > 0 %}btn-primary text-white{% else %}btn-light text-muted border{% endif %}"
-                                        id="attended-count-{{ student.registration.id }}"
-                                        onclick="openStudentAttendanceModal('{{ student.registration.id }}')"
+                                        id="attended-count-{{ student.reg_id }}"
+                                        onclick="openStudentAttendanceModal('{{ student.reg_id }}')"
                                         title="Click to view full attendance sheet for {{ student.name }}">
                                     <span>{{ student.attended_count }} / {{ student.total_classes }}</span>
                                     <i class="bi bi-chevron-right small ms-1 opacity-75"></i>
@@ -486,14 +486,14 @@
                                     <div class="progress progress-pill flex-grow-1">
                                         <div class="progress-bar {% if student.percentage == 100 %}bg-success{% else %}bg-primary{% endif %}" 
                                              role="progressbar" 
-                                             id="progress-bar-{{ student.registration.id }}"
+                                             id="progress-bar-{{ student.reg_id }}"
                                              style="width: {{ student.percentage }}%;" 
                                              aria-valuenow="{{ student.percentage }}" 
                                              aria-valuemin="0" 
                                              aria-valuemax="100">
                                         </div>
                                     </div>
-                                    <span class="small fw-semibold text-muted" id="progress-text-{{ student.registration.id }}" style="font-size: 0.78rem; min-width: 38px;">
+                                    <span class="small fw-semibold text-muted" id="progress-text-{{ student.reg_id }}" style="font-size: 0.78rem; min-width: 38px;">
                                         {{ student.percentage }}%
                                     </span>
                                 </div>
@@ -578,7 +578,7 @@
 </div>
 
 <!-- Embed Full Student Attendance JSON for Fast Interactive Modal Rendering -->
-{{ students_data|json_script:"studentsDataJSON" }}
+{{ students_json_list|json_script:"studentsDataJSON" }}
 
 <script>
     // Parse the embedded student data
@@ -586,7 +586,7 @@
     try {
         var rawData = JSON.parse(document.getElementById('studentsDataJSON').textContent);
         rawData.forEach(function(item) {
-            studentsDataset[item.registration.id] = item;
+            studentsDataset[item.reg_id] = item;
         });
     } catch(e) {
         console.error("Could not parse student JSON data", e);
@@ -676,7 +676,7 @@
                 html += '  <div>';
                 if (isLive) {
                     html += '    <button type="button" class="btn btn-sm rounded-pill px-3 ' + (isAttended ? 'btn-success text-white' : 'btn-outline-secondary') + '" ';
-                    html += '            onclick="toggleAttendanceModal(this, \'' + student.registration.id + '\', \'' + (student.user_id || '') + '\', \'' + c.class_id + '\', \'' + c.order + '\', \'' + student.name + '\')">';
+                    html += '            onclick="toggleAttendanceModal(this, \'' + student.reg_id + '\', \'' + (student.user_id || '') + '\', \'' + c.class_id + '\', \'' + c.order + '\', \'' + student.name + '\')">';
                     html += isAttended ? '<i class="bi bi-check-lg me-1"></i>Attended' : '<i class="bi bi-plus-lg me-1"></i>Mark Attended';
                     html += '    </button>';
                 } else {
@@ -727,12 +727,6 @@
 
                     // Update class item in dataset
                     student.all_classes_status.forEach(function(c) {
-                        if (String(c.class_id) === String(classId)) {
-                            c.is_attended = data.is_attended;
-                            c.completed_at_str = data.completed_at_str;
-                        }
-                    });
-                    student.recent_classes_status.forEach(function(c) {
                         if (String(c.class_id) === String(classId)) {
                             c.is_attended = data.is_attended;
                             c.completed_at_str = data.completed_at_str;
@@ -850,12 +844,6 @@
                     student.percentage = data.percentage;
 
                     student.all_classes_status.forEach(function(c) {
-                        if (String(c.class_id) === String(classId)) {
-                            c.is_attended = data.is_attended;
-                            c.completed_at_str = data.completed_at_str;
-                        }
-                    });
-                    student.recent_classes_status.forEach(function(c) {
                         if (String(c.class_id) === String(classId)) {
                             c.is_attended = data.is_attended;
                             c.completed_at_str = data.completed_at_str;

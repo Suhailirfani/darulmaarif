@@ -856,6 +856,7 @@ def attendance_list_view(request):
         progress_map[(p['student_id'], p['course_class_id'])] = p['completed_at']
 
     students_attendance_data = []
+    students_json_list = []
     total_attended_all_students = 0
     full_completed_count = 0
     zero_attended_count = 0
@@ -869,6 +870,7 @@ def attendance_list_view(request):
 
         all_classes_status = []
         recent_classes_status = []
+        json_classes_status = []
         attended_live_count = 0
 
         for c in all_classes:
@@ -878,6 +880,8 @@ def attendance_list_view(request):
             if is_attended and is_live:
                 attended_live_count += 1
 
+            completed_at_str = timezone.localtime(completed_at).strftime("%b %d, %Y %I:%M %p") if completed_at else None
+
             c_info = {
                 'class_id': c.id,
                 'order': c.order,
@@ -886,11 +890,20 @@ def attendance_list_view(request):
                 'publish_at': c.publish_at,
                 'is_attended': is_attended,
                 'completed_at': completed_at,
-                'completed_at_str': timezone.localtime(completed_at).strftime("%b %d, %Y %I:%M %p") if completed_at else None,
+                'completed_at_str': completed_at_str,
             }
             all_classes_status.append(c_info)
             if c.id in recent_class_ids:
                 recent_classes_status.append(c_info)
+
+            json_classes_status.append({
+                'class_id': c.id,
+                'order': c.order,
+                'title': c.title,
+                'is_live': is_live,
+                'is_attended': is_attended,
+                'completed_at_str': completed_at_str,
+            })
 
         percentage = round((attended_live_count / total_live_classes * 100), 1) if total_live_classes > 0 else 0
         if attended_live_count == total_live_classes and total_live_classes > 0:
@@ -918,6 +931,7 @@ def attendance_list_view(request):
 
         students_attendance_data.append({
             'registration': reg,
+            'reg_id': reg.id,
             'app_number': f"APP-{reg.application_number}",
             'name': reg.name,
             'mobile': reg.mobile,
@@ -935,6 +949,23 @@ def attendance_list_view(request):
             'percentage': percentage,
         })
 
+        students_json_list.append({
+            'reg_id': reg.id,
+            'app_number': f"APP-{reg.application_number}",
+            'name': reg.name,
+            'mobile': reg.mobile,
+            'whatsapp': reg.whatsapp,
+            'place': reg.place,
+            'district': reg.district,
+            'mentor_id': mentor_id,
+            'mentor_name': mentor_name,
+            'user_id': user_id,
+            'all_classes_status': json_classes_status,
+            'attended_count': attended_live_count,
+            'total_classes': total_live_classes,
+            'percentage': percentage,
+        })
+
     total_students_count = len(students_attendance_data)
     avg_attendance_rate = round((total_attended_all_students / (total_students_count * total_live_classes) * 100), 1) if (total_students_count > 0 and total_live_classes > 0) else 0
 
@@ -946,6 +977,7 @@ def attendance_list_view(request):
         'live_classes': live_classes,
         'scheduled_classes': scheduled_classes,
         'students_data': students_attendance_data,
+        'students_json_list': students_json_list,
         'total_live_classes': total_live_classes,
         'total_all_classes': total_all_classes,
         'total_students_count': total_students_count,

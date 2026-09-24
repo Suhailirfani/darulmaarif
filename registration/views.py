@@ -780,8 +780,16 @@ def attendance_list_view(request):
     if not is_admin and not is_mentor:
         return redirect('student_dashboard')
 
-    classes = CourseClass.objects.all().order_by('order')
-    total_classes = classes.count()
+    now = timezone.now()
+    all_classes = list(CourseClass.objects.all().order_by('order'))
+    live_classes = [c for c in all_classes if not c.publish_at or c.publish_at <= now]
+    scheduled_classes = [c for c in all_classes if c.publish_at and c.publish_at > now]
+
+    total_live_classes = len(live_classes)
+    total_all_classes = len(all_classes)
+
+    # Last 5 live classes for table cells
+    recent_classes = live_classes[-5:] if total_live_classes > 5 else live_classes
 
     mentor_filter = request.GET.get('mentor', '').strip()
     search_query = request.GET.get('search', '').strip()
@@ -816,7 +824,6 @@ def attendance_list_view(request):
             q_obj |= Q(application_num=int(clean_app_num))
         regs_query = regs_query.filter(q_obj)
 
-    # Build user map and progress map
     student_users_map = {}
     for reg in regs_query:
         user = None
@@ -853,33 +860,45 @@ def attendance_list_view(request):
     full_completed_count = 0
     zero_attended_count = 0
 
+    live_class_ids = set(c.id for c in live_classes)
+    recent_class_ids = set(c.id for c in recent_classes)
+
     for reg in regs_query:
         user = student_users_map.get(reg.id)
         user_id = user.id if user else None
 
-        classes_status = []
-        attended_count = 0
+        all_classes_status = []
+        recent_classes_status = []
+        attended_live_count = 0
 
-        for c in classes:
+        for c in all_classes:
+            is_live = c.id in live_class_ids
             completed_at = progress_map.get((user_id, c.id)) if user_id else None
             is_attended = completed_at is not None
-            if is_attended:
-                attended_count += 1
-            classes_status.append({
+            if is_attended and is_live:
+                attended_live_count += 1
+
+            c_info = {
                 'class_id': c.id,
                 'order': c.order,
                 'title': c.title,
+                'is_live': is_live,
+                'publish_at': c.publish_at,
                 'is_attended': is_attended,
                 'completed_at': completed_at,
-            })
+                'completed_at_str': timezone.localtime(completed_at).strftime("%b %d, %Y %I:%M %p") if completed_at else None,
+            }
+            all_classes_status.append(c_info)
+            if c.id in recent_class_ids:
+                recent_classes_status.append(c_info)
 
-        percentage = round((attended_count / total_classes * 100), 1) if total_classes > 0 else 0
-        if attended_count == total_classes and total_classes > 0:
+        percentage = round((attended_live_count / total_live_classes * 100), 1) if total_live_classes > 0 else 0
+        if attended_live_count == total_live_classes and total_live_classes > 0:
             full_completed_count += 1
-        elif attended_count == 0:
+        elif attended_live_count == 0:
             zero_attended_count += 1
 
-        total_attended_all_students += attended_count
+        total_attended_all_students += attended_live_count
 
         mentor_name = "-"
         mentor_id = None
@@ -889,12 +908,12 @@ def attendance_list_view(request):
             mentor_user = mentor_profile.user
             mentor_name = mentor_user.first_name or mentor_user.username
 
-        # Filter by status
-        if status_filter == 'completed' and (attended_count != total_classes or total_classes == 0):
+        # Filter by status based on live classes
+        if status_filter == 'completed' and (attended_live_count != total_live_classes or total_live_classes == 0):
             continue
-        elif status_filter == 'in_progress' and (attended_count == 0 or attended_count == total_classes):
+        elif status_filter == 'in_progress' and (attended_live_count == 0 or attended_live_count == total_live_classes):
             continue
-        elif status_filter == 'not_started' and attended_count > 0:
+        elif status_filter == 'not_started' and attended_live_count > 0:
             continue
 
         students_attendance_data.append({
@@ -908,21 +927,27 @@ def attendance_list_view(request):
             'mentor_id': mentor_id,
             'mentor_name': mentor_name,
             'user_id': user_id,
-            'classes_status': classes_status,
-            'attended_count': attended_count,
-            'total_classes': total_classes,
+            'recent_classes_status': recent_classes_status,
+            'all_classes_status': all_classes_status,
+            'attended_count': attended_live_count,
+            'total_classes': total_live_classes,
+            'total_all_classes': total_all_classes,
             'percentage': percentage,
         })
 
     total_students_count = len(students_attendance_data)
-    avg_attendance_rate = round((total_attended_all_students / (total_students_count * total_classes) * 100), 1) if (total_students_count > 0 and total_classes > 0) else 0
+    avg_attendance_rate = round((total_attended_all_students / (total_students_count * total_live_classes) * 100), 1) if (total_students_count > 0 and total_live_classes > 0) else 0
 
     mentors = UserProfile.objects.filter(role='MENTOR').select_related('user').order_by('user__first_name')
 
     context = {
-        'classes': classes,
+        'recent_classes': recent_classes,
+        'all_classes': all_classes,
+        'live_classes': live_classes,
+        'scheduled_classes': scheduled_classes,
         'students_data': students_attendance_data,
-        'total_classes': total_classes,
+        'total_live_classes': total_live_classes,
+        'total_all_classes': total_all_classes,
         'total_students_count': total_students_count,
         'full_completed_count': full_completed_count,
         'zero_attended_count': zero_attended_count,
@@ -991,9 +1016,11 @@ def admin_toggle_student_attendance_view(request):
             new_state = True
             completed_str = timezone.localtime(progress.completed_at).strftime("%b %d, %Y %I:%M %p")
 
-        total_classes = CourseClass.objects.count()
-        attended_count = StudentProgress.objects.filter(student=user, is_completed=True).count()
-        percentage = round((attended_count / total_classes * 100), 1) if total_classes > 0 else 0
+        now = timezone.now()
+        live_classes = CourseClass.objects.filter(Q(publish_at__isnull=True) | Q(publish_at__lte=now))
+        total_live_classes = live_classes.count()
+        attended_count = StudentProgress.objects.filter(student=user, course_class__in=live_classes, is_completed=True).count()
+        percentage = round((attended_count / total_live_classes * 100), 1) if total_live_classes > 0 else 0
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == '1':
             return JsonResponse({
@@ -1001,7 +1028,7 @@ def admin_toggle_student_attendance_view(request):
                 'is_attended': new_state,
                 'completed_at_str': completed_str,
                 'attended_count': attended_count,
-                'total_classes': total_classes,
+                'total_classes': total_live_classes,
                 'percentage': percentage,
             })
 
@@ -1024,20 +1051,21 @@ def export_attendance_excel_view(request):
     if not is_admin and not is_mentor:
         return redirect('student_dashboard')
 
-    classes = CourseClass.objects.all().order_by('order')
-    total_classes = classes.count()
+    now = timezone.now()
+    live_classes = list(CourseClass.objects.filter(Q(publish_at__isnull=True) | Q(publish_at__lte=now)).order_by('order'))
+    total_live_classes = len(live_classes)
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename=attendance_list_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename=attendance_live_classes_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
 
     workbook = openpyxl.Workbook()
     worksheet = workbook.active
-    worksheet.title = 'Attendance List'
+    worksheet.title = 'Live Class Attendance'
 
     columns = ['App No', 'Student Name', 'Mobile', 'WhatsApp', 'District', 'Mentor']
-    for c in classes:
+    for c in live_classes:
         columns.append(f"Class {c.order}")
-    columns.extend(['Total Attended', 'Total Classes', 'Attendance %'])
+    columns.extend(['Total Attended', 'Total Live Classes', 'Attendance %'])
 
     header_fill = openpyxl.styles.PatternFill(start_color="4D0B5A", end_color="4D0B5A", fill_type="solid")
     header_font = openpyxl.styles.Font(name="Calibri", size=11, bold=True, color="FFFFFF")
@@ -1075,7 +1103,7 @@ def export_attendance_excel_view(request):
         student_id__in=user_ids, 
         is_completed=True
     ).values('student_id', 'course_class_id', 'completed_at')
-    
+
     progress_map = {(p['student_id'], p['course_class_id']): p['completed_at'] for p in progress_qs}
 
     row_num = 1
@@ -1099,7 +1127,7 @@ def export_attendance_excel_view(request):
         ]
 
         attended_count = 0
-        for c in classes:
+        for c in live_classes:
             completed_at = progress_map.get((user_id, c.id)) if user_id else None
             if completed_at:
                 attended_count += 1
@@ -1107,8 +1135,8 @@ def export_attendance_excel_view(request):
             else:
                 row_data.append("-")
 
-        percentage = f"{round((attended_count / total_classes * 100), 1)}%" if total_classes > 0 else "0%"
-        row_data.extend([attended_count, total_classes, percentage])
+        percentage = f"{round((attended_count / total_live_classes * 100), 1)}%" if total_live_classes > 0 else "0%"
+        row_data.extend([attended_count, total_live_classes, percentage])
 
         for col_num, val in enumerate(row_data, 1):
             cell = worksheet.cell(row=row_num, column=col_num)
@@ -1125,6 +1153,7 @@ def export_attendance_excel_view(request):
 
     workbook.save(response)
     return response
+
 
 
 

@@ -53,13 +53,13 @@
 
     /* Attendance Status Badges & Buttons */
     .btn-att-toggle {
-        width: 38px;
-        height: 38px;
+        width: 36px;
+        height: 36px;
         border-radius: 10px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         border: 1px solid transparent;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
@@ -88,6 +88,19 @@
         transform: scale(1.08);
     }
 
+    /* Total Attended Clickable Badge */
+    .btn-attended-total {
+        font-size: 0.88rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        border: 1.5px solid transparent;
+    }
+    .btn-attended-total:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
     /* Progress Pill */
     .progress-pill {
         height: 6px;
@@ -96,6 +109,18 @@
         overflow: hidden;
         margin-top: 4px;
         min-width: 60px;
+    }
+
+    /* Modal Class Card */
+    .modal-class-item {
+        background: #fdfafc;
+        border: 1px solid #f0e6f2;
+        border-radius: 12px;
+        padding: 12px 16px;
+        transition: background 0.2s ease;
+    }
+    .modal-class-item:hover {
+        background: #f7eff7;
     }
 
     /* Sticky columns on wide scroll */
@@ -108,7 +133,7 @@
         }
         .sticky-col-2 {
             position: sticky;
-            left: 100px;
+            left: 95px;
             background-color: inherit;
             z-index: 2;
         }
@@ -124,10 +149,10 @@
             background: #fff !important;
             font-size: 10pt;
         }
-        .navbar, .btn, .stat-card-row, .filter-card, .toast-container, .pwa-install-btn {
+        .navbar, .btn, .stat-card-row, .filter-card, .toast-container, .pwa-install-btn, .modal {
             display: none !important;
         }
-        .container {
+        .container-fluid {
             width: 100% !important;
             max-width: 100% !important;
             padding: 0 !important;
@@ -169,7 +194,7 @@
     <!-- Print Only Header -->
     <div class="print-header text-center">
         <h3 class="fw-bold mb-1">അൽ മർഅ ഓൺലൈൻ ദർസ് - ക്ലാസ് ഹാജർ പട്ടിക</h3>
-        <p class="text-muted mb-0">Class Attendance Report | Generated: {% now "d M Y, h:i A" %}</p>
+        <p class="text-muted mb-0">Live Class Attendance Report | Generated: {% now "d M Y, h:i A" %}</p>
     </div>
 
     <!-- Top Action Bar -->
@@ -177,12 +202,12 @@
         <div>
             <div class="d-flex align-items-center gap-2">
                 <h3 class="fw-bold mb-0" style="color: #4d0b5a;">
-                    <i class="bi bi-clipboard-check-fill me-2"></i>ഹാജർ പട്ടിക (Attendance List)
+                    <i class="bi bi-clipboard-check-fill me-2"></i>ഹാജർ പട്ടിക (Live Class Attendance)
                 </h3>
                 <span class="badge rounded-pill bg-dark text-white px-3 py-2 fs-6">{{ total_students_count }} Students</span>
             </div>
             <p class="text-muted small mb-0 mt-1">
-                വിദ്യാർത്ഥികൾ ക്ലാസ് കണ്ടതിന് ശേഷമുള്ള ഹാജർ നില ഇവിടെ കാണാം. (Track student class completion and attendance in real time)
+                ലൈവ് ആയ ക്ലാസുകളുടെ ഹാജർ നില ഇവിടെ കാണാം. (Calculated based on currently live published classes)
             </p>
         </div>
         <div class="d-flex align-items-center flex-wrap gap-2">
@@ -225,11 +250,16 @@
             <div class="card stat-card shadow-sm p-3 text-white" style="background: linear-gradient(135deg, #0d6efd, #0b5ed7);">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <span class="text-white-50 small fw-semibold text-uppercase">Total Classes</span>
-                        <h3 class="fw-bold mb-0 mt-1">{{ total_classes }}</h3>
+                        <span class="text-white-50 small fw-semibold text-uppercase">Total Live Classes</span>
+                        <h3 class="fw-bold mb-0 mt-1">
+                            {{ total_live_classes }}
+                            {% if total_all_classes > total_live_classes %}
+                            <small class="fs-6 opacity-75">/ {{ total_all_classes }}</small>
+                            {% endif %}
+                        </h3>
                     </div>
                     <div class="rounded-circle p-2 bg-white bg-opacity-25 fs-4">
-                        <i class="bi bi-youtube"></i>
+                        <i class="bi bi-broadcast"></i>
                     </div>
                 </div>
             </div>
@@ -323,10 +353,10 @@
         <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <h5 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>ക്ലാസ് തിരിച്ചുള്ള ഹാജർ (Class Attendance Matrix)
+                    <i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i>ഹാജർ പട്ടിക (Live Class Attendance)
                 </h5>
                 <span class="text-muted small">
-                    Col Heads: <strong>App No</strong> | <strong>Name</strong> | <strong>Classes ( 1 | 2 | 3 | ... )</strong> | <strong>Attended</strong>
+                    Showing <strong>Last {{ recent_classes|length }} Live Classes</strong> in table • Click <strong>Total Attended</strong> to view full student sheet
                 </span>
             </div>
             <!-- Quick Legend -->
@@ -334,12 +364,12 @@
                 <span class="d-inline-flex align-items-center">
                     <span class="badge bg-success-subtle text-success border border-success-subtle rounded-circle p-1 me-1">
                         <i class="bi bi-check-lg fw-bold"></i>
-                    </span> Attended (പൂർത്തിയായി)
+                    </span> Attended
                 </span>
                 <span class="d-inline-flex align-items-center">
                     <span class="badge bg-light text-secondary border rounded-circle p-1 me-1">
                         <i class="bi bi-dash fw-bold"></i>
-                    </span> Pending (ബാക്കി)
+                    </span> Pending
                 </span>
             </div>
         </div>
@@ -349,25 +379,29 @@
                 <table class="table table-hover table-attendance align-middle" id="attendanceTable">
                     <thead>
                         <tr>
-                            <th class="sticky-col-1 text-center" style="width: 90px;">App No</th>
+                            <th class="sticky-col-1 text-center" style="width: 85px;">App No</th>
                             <th class="sticky-col-2" style="min-width: 170px;">Name (പേര്)</th>
                             <th class="d-none d-md-table-cell" style="min-width: 130px;">Mobile</th>
                             {% if is_admin %}
                             <th class="d-none d-lg-table-cell" style="min-width: 120px;">Mentor</th>
                             {% endif %}
                             
-                            <!-- Dynamic Class Headers: 1 | 2 | 3 | etc -->
-                            {% for c in classes %}
+                            <!-- Dynamic Last 5 Live Class Headers: 1 | 2 | 3 | etc -->
+                            {% for c in recent_classes %}
                             <th class="class-col" title="Class {{ c.order }}: {{ c.title }}" data-bs-toggle="tooltip">
                                 <span class="badge bg-white text-dark border shadow-xs px-2 py-1 fs-6">
                                     {{ c.order }}
                                 </span>
                             </th>
                             {% empty %}
-                            <th class="text-center text-muted">No Classes Added Yet</th>
+                            <th class="text-center text-muted">No Live Classes Available</th>
                             {% endfor %}
 
-                            <th class="text-center" style="min-width: 95px;">Attended</th>
+                            <!-- Total Attended Column -->
+                            <th class="text-center" style="min-width: 125px;">
+                                Total Attended
+                                <i class="bi bi-info-circle ms-1 small text-muted" title="Click on any student count to view complete attendance" data-bs-toggle="tooltip"></i>
+                            </th>
                             <th style="min-width: 110px;">Progress</th>
                         </tr>
                     </thead>
@@ -388,12 +422,10 @@
 
                             <!-- Student Name -->
                             <td class="sticky-col-2 fw-semibold text-dark">
-                                <div class="d-flex align-items-center">
-                                    <div>
-                                        <span>{{ student.name }}</span>
-                                        <div class="d-md-none text-muted small" style="font-size: 0.75rem;">
-                                            <i class="bi bi-telephone me-1"></i>{{ student.mobile }}
-                                        </div>
+                                <div>
+                                    <span class="d-block text-dark">{{ student.name }}</span>
+                                    <div class="d-md-none text-muted small" style="font-size: 0.75rem;">
+                                        <i class="bi bi-telephone me-1"></i>{{ student.mobile }}
                                     </div>
                                 </div>
                             </td>
@@ -417,8 +449,8 @@
                             </td>
                             {% endif %}
 
-                            <!-- Attendance Check Cells for Class 1, 2, 3, etc -->
-                            {% for c_stat in student.classes_status %}
+                            <!-- Attendance Check Cells for the Last 5 Live Classes -->
+                            {% for c_stat in student.recent_classes_status %}
                             <td class="text-center p-1">
                                 <button type="button" 
                                         class="btn-att-toggle {% if c_stat.is_attended %}attended{% else %}pending{% endif %}"
@@ -428,7 +460,7 @@
                                         data-class-id="{{ c_stat.class_id }}"
                                         data-class-order="{{ c_stat.order }}"
                                         data-student-name="{{ student.name }}"
-                                        title="{% if c_stat.is_attended %}Class {{ c_stat.order }}: Attended on {{ c_stat.completed_at|date:'M d, Y h:i A' }}{% else %}Class {{ c_stat.order }}: Not completed yet (Click to toggle){% endif %}"
+                                        title="{% if c_stat.is_attended %}Class {{ c_stat.order }}: Attended on {{ c_stat.completed_at_str }}{% else %}Class {{ c_stat.order }}: Not completed yet (Click to toggle){% endif %}"
                                         data-bs-toggle="tooltip"
                                         onclick="toggleAttendance(this)">
                                     <i class="bi {% if c_stat.is_attended %}bi-check2-circle text-success fw-bold{% else %}bi-dash text-muted opacity-50{% endif %}"></i>
@@ -436,12 +468,16 @@
                             </td>
                             {% endfor %}
 
-                            <!-- Attended Count (e.g. 3 / 5) -->
-                            <td class="text-center fw-bold">
-                                <span class="badge rounded-pill px-2 py-1 {% if student.attended_count == student.total_classes and student.total_classes > 0 %}bg-success{% elif student.attended_count > 0 %}bg-primary{% else %}bg-secondary-subtle text-muted{% endif %}" 
-                                      id="attended-count-{{ student.registration.id }}">
-                                    {{ student.attended_count }} / {{ student.total_classes }}
-                                </span>
+                            <!-- Clickable Total Attended Button -->
+                            <td class="text-center">
+                                <button type="button" 
+                                        class="btn btn-sm btn-attended-total rounded-pill px-3 py-1 fw-bold {% if student.attended_count == student.total_classes and student.total_classes > 0 %}btn-success text-white{% elif student.attended_count > 0 %}btn-primary text-white{% else %}btn-light text-muted border{% endif %}"
+                                        id="attended-count-{{ student.registration.id }}"
+                                        onclick="openStudentAttendanceModal('{{ student.registration.id }}')"
+                                        title="Click to view full attendance sheet for {{ student.name }}">
+                                    <span>{{ student.attended_count }} / {{ student.total_classes }}</span>
+                                    <i class="bi bi-chevron-right small ms-1 opacity-75"></i>
+                                </button>
                             </td>
 
                             <!-- Progress Bar & % -->
@@ -465,7 +501,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="{{ total_classes|add:6 }}" class="text-center py-5 text-muted">
+                            <td colspan="{{ recent_classes|length|add:6 }}" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block text-black-50 mb-2"></i>
                                 <h6 class="fw-bold">No student attendance records found.</h6>
                                 <p class="small mb-0">Either no approved students match the search/filter or no paid registrations exist yet.</p>
@@ -474,6 +510,55 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STUDENT COMPLETE ATTENDANCE MODAL -->
+<div class="modal fade" id="studentDetailModal" tabindex="-1" aria-labelledby="studentDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0 text-white" style="background: linear-gradient(135deg, #4d0b5a, #b10f54); border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                <div class="py-2">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-white text-dark fw-bold px-2 py-1 rounded-pill" id="modalStudentAppNo">APP-001</span>
+                        <h5 class="modal-title fw-bold mb-0 text-white" id="modalStudentName">Student Name</h5>
+                    </div>
+                    <small class="text-white-50" id="modalStudentSubtitle">Mobile: 9876543210 • Mentor: Mentor Name</small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-4">
+                <!-- Progress Summary Card in Modal -->
+                <div class="card border-0 bg-light rounded-4 p-3 mb-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                        <div>
+                            <span class="text-muted small fw-semibold">OVERALL LIVE CLASS ATTENDANCE</span>
+                            <h4 class="fw-bold mb-0 text-dark" id="modalProgressNumbers">0 / 0</h4>
+                        </div>
+                        <div>
+                            <span class="badge rounded-pill fs-6 px-3 py-2" id="modalProgressBadge">0% Completed</span>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 8px; border-radius: 6px;">
+                        <div class="progress-bar bg-success" id="modalProgressBar" role="progressbar" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Classes Full Breakdown -->
+                <h6 class="fw-bold mb-3 text-dark d-flex align-items-center">
+                    <i class="bi bi-list-check me-2 text-primary fs-5"></i>All Classes Attendance Sheet (മുഴുവൻ ക്ലാസുകളുടെയും ഹാജർ നില)
+                </h6>
+
+                <div id="modalClassesListContainer" class="d-flex flex-column gap-2">
+                    <!-- Injected via JavaScript -->
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 bg-light rounded-bottom-4">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -492,7 +577,21 @@
     </div>
 </div>
 
+<!-- Embed Full Student Attendance JSON for Fast Interactive Modal Rendering -->
+{{ students_data|json_script:"studentsDataJSON" }}
+
 <script>
+    // Parse the embedded student data
+    var studentsDataset = {};
+    try {
+        var rawData = JSON.parse(document.getElementById('studentsDataJSON').textContent);
+        rawData.forEach(function(item) {
+            studentsDataset[item.registration.id] = item;
+        });
+    } catch(e) {
+        console.error("Could not parse student JSON data", e);
+    }
+
     // Initialize tooltips
     document.addEventListener('DOMContentLoaded', function () {
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -522,7 +621,171 @@
         }
     });
 
-    // Toggle Attendance via AJAX
+    // Open Student Complete Attendance Modal
+    function openStudentAttendanceModal(regId) {
+        var student = studentsDataset[regId];
+        if (!student) return;
+
+        document.getElementById('modalStudentAppNo').innerText = student.app_number;
+        document.getElementById('modalStudentName').innerText = student.name;
+        document.getElementById('modalStudentSubtitle').innerText = 'Mobile: ' + student.mobile + (student.whatsapp ? ' • WA: ' + student.whatsapp : '') + ' • Mentor: ' + student.mentor_name + (student.district ? ' • District: ' + student.district : '');
+
+        renderModalAttendanceContent(student);
+
+        var modal = new bootstrap.Modal(document.getElementById('studentDetailModal'));
+        modal.show();
+    }
+
+    function renderModalAttendanceContent(student) {
+        var progressNumbers = document.getElementById('modalProgressNumbers');
+        var progressBadge = document.getElementById('modalProgressBadge');
+        var progressBar = document.getElementById('modalProgressBar');
+        var listContainer = document.getElementById('modalClassesListContainer');
+
+        progressNumbers.innerText = student.attended_count + ' / ' + student.total_classes + ' Live Classes Attended';
+        progressBadge.innerText = student.percentage + '% Completed';
+        progressBadge.className = 'badge rounded-pill fs-6 px-3 py-2 ' + (student.percentage === 100 ? 'bg-success text-white' : (student.percentage > 0 ? 'bg-primary text-white' : 'bg-secondary text-white'));
+        
+        progressBar.style.width = student.percentage + '%';
+        progressBar.className = 'progress-bar ' + (student.percentage === 100 ? 'bg-success' : 'bg-primary');
+
+        var html = '';
+        if (!student.all_classes_status || student.all_classes_status.length === 0) {
+            html = '<div class="text-center py-4 text-muted">No classes recorded yet.</div>';
+        } else {
+            student.all_classes_status.forEach(function(c) {
+                var isLive = c.is_live;
+                var isAttended = c.is_attended;
+                
+                html += '<div class="modal-class-item d-flex justify-content-between align-items-center flex-wrap gap-2">';
+                html += '  <div class="d-flex align-items-center gap-3">';
+                html += '    <span class="badge rounded-circle p-2 ' + (isAttended ? 'bg-success text-white' : (isLive ? 'bg-light text-dark border' : 'bg-secondary-subtle text-muted')) + '" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">' + c.order + '</span>';
+                html += '    <div>';
+                html += '      <strong class="text-dark d-block">' + c.title + '</strong>';
+                if (isAttended) {
+                    html += '      <small class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Attended: ' + (c.completed_at_str || 'Completed') + '</small>';
+                } else if (!isLive) {
+                    html += '      <small class="text-muted"><i class="bi bi-clock-history me-1"></i>Scheduled for future</small>';
+                } else {
+                    html += '      <small class="text-muted"><i class="bi bi-hourglass-split me-1"></i>Not attended yet</small>';
+                }
+                html += '    </div>';
+                html += '  </div>';
+
+                // Right action / badge
+                html += '  <div>';
+                if (isLive) {
+                    html += '    <button type="button" class="btn btn-sm rounded-pill px-3 ' + (isAttended ? 'btn-success text-white' : 'btn-outline-secondary') + '" ';
+                    html += '            onclick="toggleAttendanceModal(this, \'' + student.registration.id + '\', \'' + (student.user_id || '') + '\', \'' + c.class_id + '\', \'' + c.order + '\', \'' + student.name + '\')">';
+                    html += isAttended ? '<i class="bi bi-check-lg me-1"></i>Attended' : '<i class="bi bi-plus-lg me-1"></i>Mark Attended';
+                    html += '    </button>';
+                } else {
+                    html += '    <span class="badge bg-secondary rounded-pill px-3 py-2"><i class="bi bi-lock-fill me-1"></i>Scheduled</span>';
+                }
+                html += '  </div>';
+                html += '</div>';
+            });
+        }
+
+        listContainer.innerHTML = html;
+    }
+
+    // Toggle Attendance from Modal
+    function toggleAttendanceModal(btn, regId, userId, classId, classOrder, studentName) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+
+        var formData = new FormData();
+        formData.append('reg_id', regId);
+        if (userId) formData.append('user_id', userId);
+        formData.append('class_id', classId);
+        formData.append('ajax', '1');
+
+        fetch("{% url 'admin_toggle_attendance' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network error or permission denied');
+            return response.json();
+        })
+        .then(data => {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+
+            if (data.success) {
+                // Update local dataset
+                var student = studentsDataset[regId];
+                if (student) {
+                    student.attended_count = data.attended_count;
+                    student.total_classes = data.total_classes;
+                    student.percentage = data.percentage;
+
+                    // Update class item in dataset
+                    student.all_classes_status.forEach(function(c) {
+                        if (String(c.class_id) === String(classId)) {
+                            c.is_attended = data.is_attended;
+                            c.completed_at_str = data.completed_at_str;
+                        }
+                    });
+                    student.recent_classes_status.forEach(function(c) {
+                        if (String(c.class_id) === String(classId)) {
+                            c.is_attended = data.is_attended;
+                            c.completed_at_str = data.completed_at_str;
+                        }
+                    });
+
+                    // Re-render modal content
+                    renderModalAttendanceContent(student);
+
+                    // Sync table row button if present
+                    var tableBtn = document.getElementById('att-btn-' + regId + '-' + classId);
+                    if (tableBtn) {
+                        if (data.is_attended) {
+                            tableBtn.classList.remove('pending');
+                            tableBtn.classList.add('attended');
+                            tableBtn.innerHTML = '<i class="bi bi-check2-circle text-success fw-bold"></i>';
+                        } else {
+                            tableBtn.classList.remove('attended');
+                            tableBtn.classList.add('pending');
+                            tableBtn.innerHTML = '<i class="bi bi-dash text-muted opacity-50"></i>';
+                        }
+                    }
+
+                    // Sync table row counts
+                    var countBadge = document.getElementById('attended-count-' + regId);
+                    if (countBadge) {
+                        countBadge.innerHTML = '<span>' + data.attended_count + ' / ' + data.total_classes + '</span><i class="bi bi-chevron-right small ms-1 opacity-75"></i>';
+                        countBadge.className = 'btn btn-sm btn-attended-total rounded-pill px-3 py-1 fw-bold ' + (data.attended_count === data.total_classes && data.total_classes > 0 ? 'btn-success text-white' : (data.attended_count > 0 ? 'btn-primary text-white' : 'btn-light text-muted border'));
+                    }
+
+                    var progressBar = document.getElementById('progress-bar-' + regId);
+                    var progressText = document.getElementById('progress-text-' + regId);
+                    if (progressBar) {
+                        progressBar.style.width = data.percentage + '%';
+                        progressBar.setAttribute('aria-valuenow', data.percentage);
+                        progressBar.className = 'progress-bar ' + (data.percentage === 100 ? 'bg-success' : 'bg-primary');
+                    }
+                    if (progressText) {
+                        progressText.innerText = data.percentage + '%';
+                    }
+                }
+
+                showToast(studentName + ' - Class ' + classOrder + ': ' + (data.is_attended ? 'Marked as Attended ✓' : 'Marked as Pending -'), data.is_attended);
+            }
+        })
+        .catch(error => {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            alert('Error updating attendance: ' + error.message);
+        });
+    }
+
+    // Toggle Attendance from Table Row
     function toggleAttendance(btn) {
         var regId = btn.getAttribute('data-reg-id');
         var userId = btn.getAttribute('data-user-id');
@@ -558,7 +821,6 @@
             btn.style.opacity = '1';
 
             if (data.success) {
-                // Update button visual state
                 if (data.is_attended) {
                     btn.classList.remove('pending');
                     btn.classList.add('attended');
@@ -575,17 +837,36 @@
                     btn.setAttribute('title', newTitle);
                 }
 
-                // Update tooltip instance if bootstrap tooltip exists
                 var tooltipInstance = bootstrap.Tooltip.getInstance(btn);
                 if (tooltipInstance) {
                     tooltipInstance.setContent({ '.tooltip-inner': btn.getAttribute('title') });
                 }
 
-                // Update summary counts in row
+                // Update dataset
+                var student = studentsDataset[regId];
+                if (student) {
+                    student.attended_count = data.attended_count;
+                    student.total_classes = data.total_classes;
+                    student.percentage = data.percentage;
+
+                    student.all_classes_status.forEach(function(c) {
+                        if (String(c.class_id) === String(classId)) {
+                            c.is_attended = data.is_attended;
+                            c.completed_at_str = data.completed_at_str;
+                        }
+                    });
+                    student.recent_classes_status.forEach(function(c) {
+                        if (String(c.class_id) === String(classId)) {
+                            c.is_attended = data.is_attended;
+                            c.completed_at_str = data.completed_at_str;
+                        }
+                    });
+                }
+
                 var countBadge = document.getElementById('attended-count-' + regId);
                 if (countBadge) {
-                    countBadge.innerText = data.attended_count + ' / ' + data.total_classes;
-                    countBadge.className = 'badge rounded-pill px-2 py-1 ' + (data.attended_count === data.total_classes && data.total_classes > 0 ? 'bg-success' : (data.attended_count > 0 ? 'bg-primary' : 'bg-secondary-subtle text-muted'));
+                    countBadge.innerHTML = '<span>' + data.attended_count + ' / ' + data.total_classes + '</span><i class="bi bi-chevron-right small ms-1 opacity-75"></i>';
+                    countBadge.className = 'btn btn-sm btn-attended-total rounded-pill px-3 py-1 fw-bold ' + (data.attended_count === data.total_classes && data.total_classes > 0 ? 'btn-success text-white' : (data.attended_count > 0 ? 'btn-primary text-white' : 'btn-light text-muted border'));
                 }
 
                 var progressBar = document.getElementById('progress-bar-' + regId);
@@ -593,17 +874,12 @@
                 if (progressBar) {
                     progressBar.style.width = data.percentage + '%';
                     progressBar.setAttribute('aria-valuenow', data.percentage);
-                    if (data.percentage === 100) {
-                        progressBar.className = 'progress-bar bg-success';
-                    } else {
-                        progressBar.className = 'progress-bar bg-primary';
-                    }
+                    progressBar.className = 'progress-bar ' + (data.percentage === 100 ? 'bg-success' : 'bg-primary');
                 }
                 if (progressText) {
                     progressText.innerText = data.percentage + '%';
                 }
 
-                // Show feedback toast
                 showToast(studentName + ' - Class ' + classOrder + ': ' + (data.is_attended ? 'Marked as Attended ✓' : 'Marked as Pending -'), data.is_attended);
             }
         })
